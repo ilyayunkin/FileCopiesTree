@@ -2,12 +2,15 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QTextEdit>
+//#include <QTextEdit>
+#include <QTreeWidget>
+
 
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-    QTextEdit *te;
+//    QTextEdit *te;
+    QTreeWidget *treeWidget;
 
     void selectDir(bool checked);
 public:

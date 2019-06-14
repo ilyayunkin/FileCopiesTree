@@ -4,6 +4,8 @@
 #include <QFileDialog>
 #include <QDir>
 #include <QFile>
+#include <QIcon>
+#include <QFileIconProvider>
 #include <QVector>
 #include <QDebug>
 #include <QCryptographicHash>
@@ -132,14 +134,18 @@ MainWindow::MainWindow(QWidget *parent)
     setCentralWidget(new QWidget);
     {
         QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget());
-        {
-            te = new QTextEdit;
-            mainLayout->addWidget(te);
-        }
+        //        {
+        //            te = new QTextEdit;
+        //            mainLayout->addWidget(te);
+        //        }
         {
             QPushButton *pb = new QPushButton(tr("Select dir"));
             connect(pb, &QPushButton::clicked, this, &MainWindow::selectDir);
             mainLayout->addWidget(pb);
+        }
+        {
+            treeWidget = new QTreeWidget;
+            mainLayout->addWidget(treeWidget);
         }
     }
 }
@@ -154,18 +160,31 @@ void MainWindow::selectDir(bool checked)
     Q_UNUSED(checked);
     QString dirPath = QFileDialog::getExistingDirectory(this, tr("Select dir"));
 
+    treeWidget->setColumnCount(1);
     if(!dirPath.isEmpty()){
         Finder finder;
         finder.buildFilesList(dirPath);
-//        for(auto el : v){
+        //        for(auto el : v){
 
         EqualsTree tree = finder.buildEqualsTree();
         for(const EqualNode &node : tree){
-            te->append(node.originalPath);
-            for(const QString &copy :node.copies){
-                te->append(QString("    ") + copy);
-            }
+            //            te->append(node.originalPath);
+            //            for(const QString &copy :node.copies){
+            //                te->append(QString("    ") + copy);
+            //            }
 
+            {
+                QList<QTreeWidgetItem *> items;
+                QTreeWidgetItem *item = new QTreeWidgetItem((QTreeWidget*)0, QStringList(node.originalPath));
+                item->setIcon(0, QIcon(QFileIconProvider().icon(node.originalPath)));
+                items.append(item);
+                for(const QString &copy :node.copies){
+                    QTreeWidgetItem *item1 = new QTreeWidgetItem((QTreeWidget*)0, QStringList(copy));
+                    item1->setIcon(0, QIcon(QFileIconProvider().icon(copy)));
+                    item->addChild(item1);
+                }
+                treeWidget->insertTopLevelItems(0, items);
+            }
         }
     }
 }
