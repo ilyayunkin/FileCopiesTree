@@ -167,6 +167,7 @@ void MainWindow::selectDir(bool checked)
         //        for(auto el : v){
 
         EqualsTree tree = finder.buildEqualsTree();
+        QList<QTreeWidgetItem *> items;
         for(const EqualNode &node : tree){
             //            te->append(node.originalPath);
             //            for(const QString &copy :node.copies){
@@ -174,17 +175,18 @@ void MainWindow::selectDir(bool checked)
             //            }
 
             {
-                QList<QTreeWidgetItem *> items;
                 QTreeWidgetItem *item = new QTreeWidgetItem((QTreeWidget*)0, QStringList(node.originalPath));
-                item->setIcon(0, QIcon(QFileIconProvider().icon(node.originalPath)));
+                QFileIconProvider provider;
+                provider.setOptions(QFileIconProvider::DontUseCustomDirectoryIcons);
+                item->setIcon(0, QIcon(provider.icon(node.originalPath)));
                 items.append(item);
                 for(const QString &copy :node.copies){
                     QTreeWidgetItem *item1 = new QTreeWidgetItem((QTreeWidget*)0, QStringList(copy));
                     item1->setIcon(0, QIcon(QFileIconProvider().icon(copy)));
                     item->addChild(item1);
                 }
-                treeWidget->insertTopLevelItems(0, items);
             }
         }
+        treeWidget->insertTopLevelItems(0, items);
     }
 }

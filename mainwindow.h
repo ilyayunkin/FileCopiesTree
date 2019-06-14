@@ -5,7 +5,6 @@
 //#include <QTextEdit>
 #include <QTreeWidget>
 
-
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
