@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QTreeWidget>
+#include <QIcon>
 
 #include "RepeatFinder.h"
 
@@ -13,6 +14,7 @@ class MainWindow : public QMainWindow
 
     void selectDir(bool checked);
     void showTree(const EqualsTree&tree);
+    QIcon getIcon(const QString& path);
 public:
     MainWindow(QWidget *parent = 0);
     ~MainWindow();

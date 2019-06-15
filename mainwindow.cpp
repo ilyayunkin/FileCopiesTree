@@ -2,13 +2,23 @@
 #include <QVBoxLayout>
 #include <QPushButton>
 #include <QFileDialog>
-#include <QIcon>
 #include <QVector>
 #include <QDebug>
+#include <QFileIconProvider>
 
 #include <assert.h>
 
 #include "ThumbnailProvider.h"
+
+QIcon MainWindow::getIcon(const QString& path)
+{
+    QIcon icon = ThumbnailProvider::GetThumbnail(path);
+    if(icon.isNull()){
+        QFileIconProvider provider;
+        icon = QIcon(provider.icon(path));
+    }
+    return icon;
+}
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -54,11 +64,11 @@ void MainWindow::showTree(const EqualsTree& tree)
     for(const EqualNode &node : tree){
         QTreeWidgetItem *item = new QTreeWidgetItem((QTreeWidget*)0, QStringList(node.originalPath));
 
-        item->setIcon(0, ThumbnailProvider::GetThumbnail(node.originalPath));
+        item->setIcon(0, getIcon(node.originalPath));
         items.append(item);
         for(const QString &copy :node.copies){
             QTreeWidgetItem *item1 = new QTreeWidgetItem((QTreeWidget*)0, QStringList(copy));
-            item1->setIcon(0, ThumbnailProvider::GetThumbnail(copy));
+            item1->setIcon(0, getIcon(copy));
             item->addChild(item1);
         }
     }
