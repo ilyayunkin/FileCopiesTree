@@ -4,6 +4,7 @@
 #include <QHBoxLayout>
 #include <QPushButton>
 #include <QFileDialog>
+#include <QMessageBox>
 #include <QVector>
 #include <QDebug>
 #include <QFileIconProvider>
@@ -69,6 +70,14 @@ MainWindow::MainWindow(QWidget *parent)
                 infoLabel->setWordWrap(true);
                 imgLayout->addWidget(infoLabel);
             }
+            {
+                deleteButton = new QPushButton("delete");
+                imgLayout->addWidget(deleteButton);
+                deleteButton->hide();
+
+                connect(deleteButton, &QPushButton::clicked,
+                        this, &MainWindow::deleteFile);
+            }
         }
     }
 }
@@ -97,6 +106,8 @@ void MainWindow::showTree(const EqualsTree& tree)
     imgLabel->clear();
     infoLabel->clear();
     treeWidget->clear();
+    selectedPath.clear();
+    deleteButton->hide();
     treeWidget->setColumnCount(1);
     QList<QTreeWidgetItem *> items;
     for(const EqualNode &node : tree){
@@ -117,6 +128,8 @@ void  MainWindow::itemClicked(QTreeWidgetItem *item, int column)
 {
     Q_UNUSED(column);
     QString path = item->text(0);
+    selectedPath = path;
+    deleteButton->show();
     imgLabel->setPixmap(getIcon(path).pixmap(300, 300));
     QString sizeString;
     {
@@ -147,4 +160,31 @@ void  MainWindow::itemDoubleClicked(QTreeWidgetItem *item, int column)
 
     QUrl url = QUrl::fromLocalFile(path);
     QDesktopServices::openUrl(url);
+}
+
+void MainWindow::deleteFile(bool triggered)
+{
+    Q_UNUSED(triggered)
+    bool confirm =
+            QMessageBox::question(this,
+                                  tr("Confirm deleting"),
+                                  QString(tr("Do you really want to delete %1?")).arg(selectedPath)) ==
+            QMessageBox::Yes;
+
+    if(confirm){
+        qDebug() << selectedPath << " deletion confirmed";
+        bool removed = QDir().remove(selectedPath);
+
+        if(removed){
+            QMessageBox::information(this,
+                                     tr("File is removed"),
+                                     QString(tr("File %1 is removed")).arg(selectedPath));
+            qDebug() << selectedPath << " removed";
+        }else{
+            QMessageBox::critical(this,
+                                  tr("File is removed"),
+                                  QString(tr("File %1 is NOT removed")).arg(selectedPath));
+            qDebug() << selectedPath << " NOT removed!!!!!!!!";
+        }
+    }
 }

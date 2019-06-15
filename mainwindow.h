@@ -5,6 +5,7 @@
 #include <QTreeWidget>
 #include <QIcon>
 #include <QLabel>
+#include <QPushButton>
 
 #include "RepeatFinder.h"
 
@@ -14,6 +15,8 @@ class MainWindow : public QMainWindow
     QTreeWidget *treeWidget = nullptr;
     QLabel *imgLabel = nullptr;
     QLabel *infoLabel = nullptr;
+    QPushButton *deleteButton = nullptr;
+    QString selectedPath;
 
     void selectDir(bool checked);
     void showTree(const EqualsTree&tree);
@@ -21,6 +24,8 @@ class MainWindow : public QMainWindow
 
     void  itemClicked(QTreeWidgetItem *item, int column);
     void itemDoubleClicked(QTreeWidgetItem *item, int column);
+
+    void deleteFile(bool triggered);
 
 public:
     MainWindow(QWidget *parent = 0);
