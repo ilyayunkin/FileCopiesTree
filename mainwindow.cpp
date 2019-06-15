@@ -5,13 +5,14 @@
 #include <QDir>
 #include <QFile>
 #include <QIcon>
-#include <QFileIconProvider>
 #include <QVector>
 #include <QDebug>
 #include <QCryptographicHash>
 
 #include <algorithm>
 #include <assert.h>
+
+#include "ThumbnailProvider.h"
 
 struct El
 {
@@ -176,13 +177,12 @@ void MainWindow::selectDir(bool checked)
 
             {
                 QTreeWidgetItem *item = new QTreeWidgetItem((QTreeWidget*)0, QStringList(node.originalPath));
-                QFileIconProvider provider;
-                provider.setOptions(QFileIconProvider::DontUseCustomDirectoryIcons);
-                item->setIcon(0, QIcon(provider.icon(node.originalPath)));
+
+                item->setIcon(0, ThumbnailProvider::GetThumbnail(node.originalPath));
                 items.append(item);
                 for(const QString &copy :node.copies){
                     QTreeWidgetItem *item1 = new QTreeWidgetItem((QTreeWidget*)0, QStringList(copy));
-                    item1->setIcon(0, QIcon(QFileIconProvider().icon(copy)));
+                    item1->setIcon(0, ThumbnailProvider::GetThumbnail(copy));
                     item->addChild(item1);
                 }
             }
