@@ -8,7 +8,6 @@
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-//    QTextEdit *te;
     QTreeWidget *treeWidget;
 
     void selectDir(bool checked);

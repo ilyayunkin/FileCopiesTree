@@ -135,10 +135,6 @@ MainWindow::MainWindow(QWidget *parent)
     setCentralWidget(new QWidget);
     {
         QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget());
-        //        {
-        //            te = new QTextEdit;
-        //            mainLayout->addWidget(te);
-        //        }
         {
             QPushButton *pb = new QPushButton(tr("Select dir"));
             connect(pb, &QPushButton::clicked, this, &MainWindow::selectDir);
@@ -170,21 +166,14 @@ void MainWindow::selectDir(bool checked)
         EqualsTree tree = finder.buildEqualsTree();
         QList<QTreeWidgetItem *> items;
         for(const EqualNode &node : tree){
-            //            te->append(node.originalPath);
-            //            for(const QString &copy :node.copies){
-            //                te->append(QString("    ") + copy);
-            //            }
+            QTreeWidgetItem *item = new QTreeWidgetItem((QTreeWidget*)0, QStringList(node.originalPath));
 
-            {
-                QTreeWidgetItem *item = new QTreeWidgetItem((QTreeWidget*)0, QStringList(node.originalPath));
-
-                item->setIcon(0, ThumbnailProvider::GetThumbnail(node.originalPath));
-                items.append(item);
-                for(const QString &copy :node.copies){
-                    QTreeWidgetItem *item1 = new QTreeWidgetItem((QTreeWidget*)0, QStringList(copy));
-                    item1->setIcon(0, ThumbnailProvider::GetThumbnail(copy));
-                    item->addChild(item1);
-                }
+            item->setIcon(0, ThumbnailProvider::GetThumbnail(node.originalPath));
+            items.append(item);
+            for(const QString &copy :node.copies){
+                QTreeWidgetItem *item1 = new QTreeWidgetItem((QTreeWidget*)0, QStringList(copy));
+                item1->setIcon(0, ThumbnailProvider::GetThumbnail(copy));
+                item->addChild(item1);
             }
         }
         treeWidget->insertTopLevelItems(0, items);
