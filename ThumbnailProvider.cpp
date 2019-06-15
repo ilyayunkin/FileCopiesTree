@@ -14,7 +14,7 @@
 #include <shlobj.h>
 
 ///I used http://www.cplusplus.com/forum/windows/100661/
-HBITMAP ThumbnailProvider::GetThumbnail(std::wstring File)
+static HBITMAP Thumbnail(std::wstring File)
 {
     std::wstring Folder,FileName;
     int Pos = File.find_last_of(L"\\");
@@ -79,4 +79,9 @@ HBITMAP ThumbnailProvider::GetThumbnail(std::wstring File)
     pSub->Release();
 
     return hThumbnail;
+}
+
+QIcon ThumbnailProvider::GetThumbnail(QString path)
+{
+    return QIcon(QtWin::fromHBITMAP(Thumbnail(path.replace('/', '\\').toStdWString())));
 }
