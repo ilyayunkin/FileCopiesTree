@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include <QVBoxLayout>
+#include <QHBoxLayout>
 #include <QPushButton>
 #include <QFileDialog>
 #include <QVector>
@@ -24,16 +25,29 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
     setCentralWidget(new QWidget);
+    QHBoxLayout *mainLayout = new QHBoxLayout(centralWidget());
     {
-        QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget());
         {
-            QPushButton *pb = new QPushButton(tr("Select dir"));
-            connect(pb, &QPushButton::clicked, this, &MainWindow::selectDir);
-            mainLayout->addWidget(pb);
+            QVBoxLayout *treeLayout = new QVBoxLayout;
+            mainLayout->addLayout(treeLayout);
+            {
+                QPushButton *pb = new QPushButton(tr("Select dir"));
+                connect(pb, &QPushButton::clicked, this, &MainWindow::selectDir);
+                treeLayout->addWidget(pb);
+            }
+
+            {
+                treeWidget = new QTreeWidget;
+                treeLayout->addWidget(treeWidget);
+                connect(treeWidget, &QTreeWidget::itemClicked,
+                        this, &MainWindow::itemClicked);
+            }
         }
         {
-            treeWidget = new QTreeWidget;
-            mainLayout->addWidget(treeWidget);
+            QVBoxLayout *imgLayout = new QVBoxLayout;
+            mainLayout->addLayout(imgLayout);
+            imgLabel = new QLabel;
+            imgLayout->addWidget(imgLabel);
         }
     }
 }
@@ -59,6 +73,7 @@ void MainWindow::selectDir(bool checked)
 
 void MainWindow::showTree(const EqualsTree& tree)
 {
+    imgLabel->clear();
     treeWidget->clear();
     treeWidget->setColumnCount(1);
     QList<QTreeWidgetItem *> items;
@@ -74,4 +89,11 @@ void MainWindow::showTree(const EqualsTree& tree)
         }
     }
     treeWidget->insertTopLevelItems(0, items);
+}
+
+void  MainWindow::itemClicked(QTreeWidgetItem *item, int column)
+{
+    Q_UNUSED(column);
+    QString path = item->text(0);
+    imgLabel->setPixmap(getIcon(path).pixmap(300, 300));
 }
