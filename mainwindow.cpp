@@ -66,6 +66,7 @@ MainWindow::MainWindow(QWidget *parent)
             }
             {
                 infoLabel = new QLabel;
+                infoLabel->setWordWrap(true);
                 imgLayout->addWidget(infoLabel);
             }
         }
