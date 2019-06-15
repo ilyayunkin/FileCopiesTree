@@ -73,9 +73,9 @@ public:
         tree.reserve(2048);
         ElIterator it = v.begin();
 
-        while(it != v.end()){
+        while((it + 1) != v.end()){
             auto el = *it;
-            auto range = std::equal_range(it, std::end(v), el);
+            auto range = std::equal_range(it + 1, std::end(v), el);
             EqualNode node;
             node.originalPath = el.path;
 
