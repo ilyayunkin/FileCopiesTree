@@ -6,7 +6,8 @@
 #include <QVector>
 #include <QDebug>
 #include <QFileIconProvider>
-
+#include <QSplitter>
+#include <QHeaderView>
 #include <assert.h>
 
 #include "ThumbnailProvider.h"
@@ -26,10 +27,14 @@ MainWindow::MainWindow(QWidget *parent)
 {
     setCentralWidget(new QWidget);
     QHBoxLayout *mainLayout = new QHBoxLayout(centralWidget());
+    QSplitter *splitter = new QSplitter;
+    mainLayout->addWidget(splitter);
     {
         {
-            QVBoxLayout *treeLayout = new QVBoxLayout;
-            mainLayout->addLayout(treeLayout);
+            QWidget *w = new QWidget;
+            QVBoxLayout *treeLayout = new QVBoxLayout(w);
+            treeLayout->setMargin(0);
+            splitter->addWidget(w);
             {
                 QPushButton *pb = new QPushButton(tr("Select dir"));
                 connect(pb, &QPushButton::clicked, this, &MainWindow::selectDir);
@@ -38,15 +43,19 @@ MainWindow::MainWindow(QWidget *parent)
 
             {
                 treeWidget = new QTreeWidget;
+                treeWidget->header()->hide();
                 treeLayout->addWidget(treeWidget);
                 connect(treeWidget, &QTreeWidget::itemClicked,
                         this, &MainWindow::itemClicked);
             }
         }
         {
-            QVBoxLayout *imgLayout = new QVBoxLayout;
-            mainLayout->addLayout(imgLayout);
+            QWidget *w = new QWidget;
+            QVBoxLayout *imgLayout = new QVBoxLayout(w);
+            imgLayout->setMargin(0);
+            splitter->addWidget(w);
             imgLabel = new QLabel;
+            imgLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
             imgLayout->addWidget(imgLabel);
         }
     }
