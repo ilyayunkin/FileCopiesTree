@@ -42,21 +42,25 @@ void MainWindow::selectDir(bool checked)
     if(!dirPath.isEmpty()){
         RepeatFinder finder;
         finder.buildFilesList(dirPath);
-        //        for(auto el : v){
 
         EqualsTree tree = finder.buildEqualsTree();
-        QList<QTreeWidgetItem *> items;
-        for(const EqualNode &node : tree){
-            QTreeWidgetItem *item = new QTreeWidgetItem((QTreeWidget*)0, QStringList(node.originalPath));
-
-            item->setIcon(0, ThumbnailProvider::GetThumbnail(node.originalPath));
-            items.append(item);
-            for(const QString &copy :node.copies){
-                QTreeWidgetItem *item1 = new QTreeWidgetItem((QTreeWidget*)0, QStringList(copy));
-                item1->setIcon(0, ThumbnailProvider::GetThumbnail(copy));
-                item->addChild(item1);
-            }
-        }
-        treeWidget->insertTopLevelItems(0, items);
+        showTree(tree);
     }
+}
+
+void MainWindow::showTree(const EqualsTree& tree)
+{
+    QList<QTreeWidgetItem *> items;
+    for(const EqualNode &node : tree){
+        QTreeWidgetItem *item = new QTreeWidgetItem((QTreeWidget*)0, QStringList(node.originalPath));
+
+        item->setIcon(0, ThumbnailProvider::GetThumbnail(node.originalPath));
+        items.append(item);
+        for(const QString &copy :node.copies){
+            QTreeWidgetItem *item1 = new QTreeWidgetItem((QTreeWidget*)0, QStringList(copy));
+            item1->setIcon(0, ThumbnailProvider::GetThumbnail(copy));
+            item->addChild(item1);
+        }
+    }
+    treeWidget->insertTopLevelItems(0, items);
 }

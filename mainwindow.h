@@ -12,6 +12,7 @@ class MainWindow : public QMainWindow
     QTreeWidget *treeWidget;
 
     void selectDir(bool checked);
+    void showTree(const EqualsTree&tree);
 public:
     MainWindow(QWidget *parent = 0);
     ~MainWindow();
