@@ -28,8 +28,10 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         main.cpp \
         mainwindow.cpp \
-    ThumbnailProvider.cpp
+    ThumbnailProvider.cpp \
+    RepeatFinder.cpp
 
 HEADERS += \
         mainwindow.h \
-    ThumbnailProvider.h
+    ThumbnailProvider.h \
+    RepeatFinder.h

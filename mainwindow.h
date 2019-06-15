@@ -2,8 +2,9 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-//#include <QTextEdit>
 #include <QTreeWidget>
+
+#include "RepeatFinder.h"
 
 class MainWindow : public QMainWindow
 {
