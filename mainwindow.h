@@ -13,12 +13,14 @@ class MainWindow : public QMainWindow
     Q_OBJECT
     QTreeWidget *treeWidget = nullptr;
     QLabel *imgLabel = nullptr;
+    QLabel *infoLabel = nullptr;
 
     void selectDir(bool checked);
     void showTree(const EqualsTree&tree);
     QIcon getIcon(const QString& path);
 
     void  itemClicked(QTreeWidgetItem *item, int column);
+    void itemDoubleClicked(QTreeWidgetItem *item, int column);
 
 public:
     MainWindow(QWidget *parent = 0);

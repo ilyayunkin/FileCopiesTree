@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QPushButton>
@@ -6,8 +7,11 @@
 #include <QVector>
 #include <QDebug>
 #include <QFileIconProvider>
+#include <QDesktopServices>
 #include <QSplitter>
 #include <QHeaderView>
+#include <QTextCodec>
+
 #include <assert.h>
 
 #include "ThumbnailProvider.h"
@@ -40,11 +44,13 @@ MainWindow::MainWindow(QWidget *parent)
                 connect(pb, &QPushButton::clicked, this, &MainWindow::selectDir);
                 treeLayout->addWidget(pb);
             }
-
             {
                 treeWidget = new QTreeWidget;
                 treeWidget->header()->hide();
                 treeLayout->addWidget(treeWidget);
+
+                connect(treeWidget, &QTreeWidget::itemDoubleClicked,
+                        this, &MainWindow::itemDoubleClicked);
                 connect(treeWidget, &QTreeWidget::itemClicked,
                         this, &MainWindow::itemClicked);
             }
@@ -54,9 +60,14 @@ MainWindow::MainWindow(QWidget *parent)
             QVBoxLayout *imgLayout = new QVBoxLayout(w);
             imgLayout->setMargin(0);
             splitter->addWidget(w);
-            imgLabel = new QLabel;
-            imgLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-            imgLayout->addWidget(imgLabel);
+            {
+                imgLabel = new QLabel;
+                imgLayout->addWidget(imgLabel);
+            }
+            {
+                infoLabel = new QLabel;
+                imgLayout->addWidget(infoLabel);
+            }
         }
     }
 }
@@ -83,6 +94,7 @@ void MainWindow::selectDir(bool checked)
 void MainWindow::showTree(const EqualsTree& tree)
 {
     imgLabel->clear();
+    infoLabel->clear();
     treeWidget->clear();
     treeWidget->setColumnCount(1);
     QList<QTreeWidgetItem *> items;
@@ -105,4 +117,16 @@ void  MainWindow::itemClicked(QTreeWidgetItem *item, int column)
     Q_UNUSED(column);
     QString path = item->text(0);
     imgLabel->setPixmap(getIcon(path).pixmap(300, 300));
+    QString info = QString(tr("Path:%1\r\n")).arg(path)+
+            QString("Size:%1").arg(QFile(path).size());
+    infoLabel->setText(info);
+}
+
+void  MainWindow::itemDoubleClicked(QTreeWidgetItem *item, int column)
+{
+    Q_UNUSED(column);
+    QString path = item->text(0);
+
+    QUrl url = QUrl::fromLocalFile(path);
+    QDesktopServices::openUrl(url);
 }
