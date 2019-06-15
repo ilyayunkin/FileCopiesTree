@@ -77,6 +77,7 @@ static HBITMAP Thumbnail(std::wstring File)
 
     pDesktop->Release();
     pSub->Release();
+    pIExtract->Release();
 
     return hThumbnail;
 }
