@@ -118,8 +118,25 @@ void  MainWindow::itemClicked(QTreeWidgetItem *item, int column)
     Q_UNUSED(column);
     QString path = item->text(0);
     imgLabel->setPixmap(getIcon(path).pixmap(300, 300));
+    QString sizeString;
+    {
+        auto size = QFile(path).size();
+        auto gb = size / 1024 / 1024 / 1024;
+        size = size % (1024 * 1024 * 1024);
+        auto mb = size / 1024 / 1024;
+        size = size % (1024 * 1024);
+        auto kb = size / 1024;
+        size = size % (1024);
+        auto b = size;
+
+        if(gb) sizeString += QString("%1 Gbytes ").arg(gb);
+        if(mb) sizeString += QString("%1 Mbytes ").arg(mb);
+        if(kb) sizeString += QString("%1 kbytes ").arg(kb);
+        if(b) sizeString += QString("%1 bytes ").arg(b);
+    }
+
     QString info = QString(tr("Path:%1\r\n")).arg(path)+
-            QString("Size:%1").arg(QFile(path).size());
+            QString("Size:%1").arg(sizeString);
     infoLabel->setText(info);
 }
 
