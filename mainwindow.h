@@ -10,7 +10,7 @@
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-    QTreeWidget *treeWidget;
+    QTreeWidget *treeWidget = nullptr;
 
     void selectDir(bool checked);
     void showTree(const EqualsTree&tree);

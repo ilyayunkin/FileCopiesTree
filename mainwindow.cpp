@@ -48,7 +48,6 @@ void MainWindow::selectDir(bool checked)
     Q_UNUSED(checked);
     QString dirPath = QFileDialog::getExistingDirectory(this, tr("Select dir"));
 
-    treeWidget->setColumnCount(1);
     if(!dirPath.isEmpty()){
         RepeatFinder finder;
         finder.buildFilesList(dirPath);
@@ -60,6 +59,8 @@ void MainWindow::selectDir(bool checked)
 
 void MainWindow::showTree(const EqualsTree& tree)
 {
+    treeWidget->clear();
+    treeWidget->setColumnCount(1);
     QList<QTreeWidgetItem *> items;
     for(const EqualNode &node : tree){
         QTreeWidgetItem *item = new QTreeWidgetItem((QTreeWidget*)0, QStringList(node.originalPath));
