@@ -43,25 +43,38 @@ EqualsTree RepeatFinder::buildEqualsTree()
 
     auto end = v.end();
     while((it != end) && ((it + 1) != end)){
-        auto el = *it;
-        auto range = std::equal_range(it + 1, end, el);
-        EqualNode node;
-        node.originalPath = el.path;
-
-        auto copyIt = range.first;
-        while(copyIt != range.second){
-            auto copy = *copyIt;
-            if((el.path != copy.path) &&
-                    (hash(el.path) == hash(copy.path))){
-                node.copies.append(copy.path);
+        const auto &el = *it;
+        auto range = std::equal_range(it, end, el);
+        {
+            ElVector copiesVector;
+            std::copy(range.first, range.second, std::back_inserter(copiesVector));
+            auto originalIt = copiesVector.begin();
+            while(originalIt != copiesVector.end()){
+                const auto &original = *originalIt;
+                {
+                    EqualNode node;
+                    node.originalPath = original.path;
+                    {
+                        auto copyIt = copiesVector.begin();
+                        while(copyIt != copiesVector.end()){
+                            auto copy = *copyIt;
+                            if((original.path != copy.path) &&
+                                    (hash(original.path) == hash(copy.path))){
+                                node.copies.append(copy.path);
+                                copyIt = copiesVector.erase(copyIt);
+                            }else{
+                                ++copyIt;
+                            }
+                        }
+                    }
+                    if(!node.copies.isEmpty()){
+                        tree.append(node);
+                    }
+                }
+                ++originalIt;
             }
-            ++copyIt;
         }
         it = range.second;
-
-        if(!node.copies.isEmpty()){
-            tree.append(node);
-        }
     }
 
     return tree;
