@@ -15,7 +15,7 @@ static QByteArray hash(const QString &path)
         QCryptographicHash h(QCryptographicHash::Md5);
         h.addData(&f);
         ret = h.result();
-        qDebug() << path << ret;
+        qDebug() << __FUNCTION__ << path << ret;
     }
     return ret;
 }
@@ -41,26 +41,23 @@ EqualsTree RepeatFinder::buildEqualsTree()
     tree.reserve(2048);
     ElIterator it = v.begin();
 
-    while((it + 1) != v.end()){
+    auto end = v.end();
+    while((it != end) && ((it + 1) != end)){
         auto el = *it;
-        auto range = std::equal_range(it + 1, std::end(v), el);
+        auto range = std::equal_range(it + 1, end, el);
         EqualNode node;
         node.originalPath = el.path;
 
-        if(range.first != range.second){
-            auto findEquals = [&node, el](const El copy)
-            {
-                if((el.path != copy.path) &&
-                        (hash(el.path) == hash(copy.path))){
-                    node.copies.append(copy.path);
-                }
-            };
-            std::for_each(range.first, range.second, findEquals);
-
-            it = range.second;
-        } else {
-            ++it;
+        auto copyIt = range.first;
+        while(copyIt != range.second){
+            auto copy = *copyIt;
+            if((el.path != copy.path) &&
+                    (hash(el.path) == hash(copy.path))){
+                node.copies.append(copy.path);
+            }
+            ++copyIt;
         }
+        it = range.second;
 
         if(!node.copies.isEmpty()){
             tree.append(node);
