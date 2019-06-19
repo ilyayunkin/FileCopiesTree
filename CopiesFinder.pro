@@ -29,9 +29,11 @@ SOURCES += \
         main.cpp \
         mainwindow.cpp \
     ThumbnailProvider.cpp \
-    RepeatFinder.cpp
+    RepeatFinder.cpp \
+    ThumbnailedIconProvider.cpp
 
 HEADERS += \
         mainwindow.h \
     ThumbnailProvider.h \
-    RepeatFinder.h
+    RepeatFinder.h \
+    ThumbnailedIconProvider.h

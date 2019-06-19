@@ -14,7 +14,7 @@
 #include <shlobj.h>
 
 ///I used http://www.cplusplus.com/forum/windows/100661/
-static HBITMAP Thumbnail(std::wstring File)
+static HBITMAP Thumbnail(std::wstring File, long width = 300, long heigth = 300)
 {
     std::wstring Folder,FileName;
     int Pos = File.find_last_of(L"\\");
@@ -60,9 +60,7 @@ static HBITMAP Thumbnail(std::wstring File)
         return NULL;
     }
 
-    SIZE size;
-    size.cx =300;
-    size.cy =300;
+    SIZE size{width, heigth};
 
     DWORD dwFlags = IEIFLAG_ORIGSIZE | IEIFLAG_QUALITY;
 
@@ -82,7 +80,7 @@ static HBITMAP Thumbnail(std::wstring File)
     return hThumbnail;
 }
 
-QIcon ThumbnailProvider::GetThumbnail(QString path)
+QPixmap ThumbnailProvider::GetThumbnail(QString path, long width, long heigth)
 {
-    return QIcon(QtWin::fromHBITMAP(Thumbnail(path.replace('/', '\\').toStdWString())));
+    return QtWin::fromHBITMAP(Thumbnail(path.replace('/', '\\').toStdWString(), width, heigth));
 }

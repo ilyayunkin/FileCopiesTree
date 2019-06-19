@@ -16,7 +16,16 @@
 #include <assert.h>
 
 #include "ThumbnailProvider.h"
-#include "ThumbnailedIconProvider.h"
+
+QIcon MainWindow::getIcon(const QString& path)
+{
+    QIcon icon = ThumbnailProvider::GetThumbnail(path);
+    if(icon.isNull()){
+        QFileIconProvider provider;
+        icon = QIcon(provider.icon(path));
+    }
+    return icon;
+}
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -85,9 +94,7 @@ void MainWindow::selectDir(bool checked)
 
     if(!dirPath.isEmpty()){
         RepeatFinder finder;
-        finder.buildFilesList(dirPath);
-
-        EqualsTree tree = finder.buildEqualsTree();
+        EqualsTree tree = finder.findRepeats(dirPath);
         showTree(tree);
     }
 }
@@ -104,11 +111,11 @@ void MainWindow::showTree(const EqualsTree& tree)
     for(const EqualNode &node : tree){
         QTreeWidgetItem *item = new QTreeWidgetItem((QTreeWidget*)0, QStringList(node.originalPath));
 
-        item->setIcon(0, ThumbnailedIconProvider().icon(node.originalPath));
+        item->setIcon(0, getIcon(node.originalPath));
         items.append(item);
         for(const QString &copy :node.copies){
             QTreeWidgetItem *item1 = new QTreeWidgetItem((QTreeWidget*)0, QStringList(copy));
-            item1->setIcon(0, ThumbnailedIconProvider().icon(copy));
+            item1->setIcon(0, getIcon(copy));
             item->addChild(item1);
         }
     }
@@ -121,10 +128,15 @@ void  MainWindow::itemClicked(QTreeWidgetItem *item, int column)
     QString path = item->text(0);
     selectedPath = path;
     deleteButton->show();
-    imgLabel->setPixmap(ThumbnailedIconProvider().icon(path).pixmap(300, 300));
+    imgLabel->setPixmap(getIcon(path).pixmap(300, 300));
     QString sizeString;
     {
-        auto size = QFile(path).size();
+        qint64 size;
+        if(QFileInfo(path).isFile()){
+            size = QFile(path).size();
+        }else{
+            size = dirSize(path);
+        }
         auto gb = size / 1024 / 1024 / 1024;
         size = size % (1024 * 1024 * 1024);
         auto mb = size / 1024 / 1024;
@@ -136,7 +148,7 @@ void  MainWindow::itemClicked(QTreeWidgetItem *item, int column)
         if(gb) sizeString += QString("%1 Gbytes ").arg(gb);
         if(mb) sizeString += QString("%1 Mbytes ").arg(mb);
         if(kb) sizeString += QString("%1 kbytes ").arg(kb);
-        if(b) sizeString += QString("%1 bytes ").arg(b);
+        sizeString += QString("%1 bytes ").arg(b);
     }
 
     QString info = QString(tr("Path:%1\r\n")).arg(path)+
