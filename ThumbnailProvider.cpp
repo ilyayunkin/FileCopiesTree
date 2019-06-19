@@ -82,5 +82,8 @@ static HBITMAP Thumbnail(std::wstring File, long width = 300, long heigth = 300)
 
 QPixmap ThumbnailProvider::GetThumbnail(QString path, long width, long heigth)
 {
-    return QtWin::fromHBITMAP(Thumbnail(path.replace('/', '\\').toStdWString(), width, heigth));
+    HBITMAP hBmp = Thumbnail(path.replace('/', '\\').toStdWString(), width, heigth);
+    QPixmap ret = QtWin::fromHBITMAP(hBmp);
+    DeleteObject(hBmp);
+    return ret;
 }
