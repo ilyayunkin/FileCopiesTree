@@ -19,6 +19,8 @@
 #include "ThumbnailedIconProvider.h"
 #include "DirSize.h"
 
+#include <QDateTime>
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
@@ -85,10 +87,15 @@ void MainWindow::selectDir(bool checked)
     QString dirPath = QFileDialog::getExistingDirectory(this, tr("Select dir"));
 
     if(!dirPath.isEmpty()){
-        RepeatFinder finder;
-        EqualsTree tree = finder.findCopies(dirPath);
+        QDateTime begin = QDateTime::currentDateTime();
+        {
+            RepeatFinder finder;
+            EqualsTree tree = finder.findCopies(dirPath);
 
-        showTree(tree);
+            showTree(tree);
+        }
+        QDateTime end = QDateTime::currentDateTime();
+        qDebug() << "It took" << begin.secsTo(end) << "sec";
     }
 }
 
