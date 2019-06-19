@@ -34,7 +34,7 @@ static QByteArray dirHash(const QString &path)
         }else if(entry.isDir() &&
                  entry.fileName() != "." &&
                  entry.fileName() != ".."){
-            ret += dirHash(entry.absoluteFilePath());
+            ret += dirHash(entry.absoluteFilePath()) + '/';
             qDebug() << __FUNCTION__ << __LINE__;
         }
     }
