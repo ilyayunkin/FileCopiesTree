@@ -30,10 +30,12 @@ SOURCES += \
         mainwindow.cpp \
     ThumbnailProvider.cpp \
     RepeatFinder.cpp \
-    ThumbnailedIconProvider.cpp
+    ThumbnailedIconProvider.cpp \
+    DirSize.cpp
 
 HEADERS += \
         mainwindow.h \
     ThumbnailProvider.h \
     RepeatFinder.h \
-    ThumbnailedIconProvider.h
+    ThumbnailedIconProvider.h \
+    DirSize.h

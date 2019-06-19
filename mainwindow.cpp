@@ -17,6 +17,7 @@
 
 #include "ThumbnailProvider.h"
 #include "ThumbnailedIconProvider.h"
+#include "DirSize.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -85,9 +86,8 @@ void MainWindow::selectDir(bool checked)
 
     if(!dirPath.isEmpty()){
         RepeatFinder finder;
-        finder.buildFilesList(dirPath);
+        EqualsTree tree = finder.findCopies(dirPath);
 
-        EqualsTree tree = finder.buildEqualsTree();
         showTree(tree);
     }
 }
@@ -124,7 +124,7 @@ void  MainWindow::itemClicked(QTreeWidgetItem *item, int column)
     imgLabel->setPixmap(ThumbnailedIconProvider().icon(path).pixmap(300, 300));
     QString sizeString;
     {
-        auto size = QFile(path).size();
+        auto size = dirSize(path);
         auto gb = size / 1024 / 1024 / 1024;
         size = size % (1024 * 1024 * 1024);
         auto mb = size / 1024 / 1024;

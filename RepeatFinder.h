@@ -16,6 +16,7 @@ struct El
 };
 typedef QVector<El> ElVector;
 typedef QVector<El>::iterator ElIterator;
+typedef QVector<El>::const_iterator ElConstIterator;
 
 struct EqualNode
 {
@@ -31,12 +32,12 @@ public:
 
     RepeatFinder();
 
-    /// Builds sorted by size list of files in dir and subdirs.
-    void buildFilesList(const QString &path);
-    EqualsTree buildEqualsTree();
+    EqualsTree findCopies(const QString &path);
 private:
-    QVector<El>v;
-    void add(const QDir &dir);
+    void add(const QDir &dir, QVector<El> &fileVector, QVector<El> &dirVector);
+    /// Builds sorted by size list of files in dir and subdirs.
+    void buildFilesList(const QString &path, QVector<El> &fileVector, QVector<El> &dirVector);
+    EqualsTree buildEqualsTree(const QVector<El> &v);
 };
 
 #endif // REPEATFINDER_H
