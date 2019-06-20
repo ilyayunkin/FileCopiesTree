@@ -91,38 +91,42 @@ EqualsTree RepeatFinder::buildEqualsTree(const QVector<El> &v)
     ElConstIterator it = v.cbegin();
 
     auto end = v.cend();
-    while((it != end) && ((it + 1) != end)){
+    while((it != end) && ((it + 1) != end))
+    {
         const auto &el = *it;
         auto range = std::equal_range(it, end, el);
+        auto rangeSize = range.second - range.first;
         {
-            ElVector copiesVector;
-            std::copy(range.first, range.second, std::back_inserter(copiesVector));
-            auto originalIt = copiesVector.begin();
-            while(originalIt != copiesVector.end()){
-                const auto &original = *originalIt;
+            bool indexed[rangeSize] = { 0 };
+            auto lastIndex = rangeSize / 2 + rangeSize % 2;
+
+            for(int originalIndex = 0; originalIndex <= lastIndex; ++originalIndex)
+            {
+                if(!indexed[originalIndex])
                 {
+                    const auto &original = *(range.first + originalIndex);
                     EqualNode node;
-                    node.originalPath = original.path;
+                    for(int copyIndex = originalIndex; copyIndex < rangeSize; ++copyIndex)
                     {
-                        auto copyIt = copiesVector.begin();
-                        while(copyIt != copiesVector.end()){
-                            auto copy = *copyIt;
+                        if(!indexed[copyIndex])
+                        {
+                            const auto &copy = *(range.first + copyIndex);
                             if((original.path != copy.path) &&
                                     (original.path.left(copy.path.length() + 1) != (copy.path + '/')) &&
                                     (copy.path.left(original.path.length() + 1) != (original.path + '/')) &&
-                                    (hash(original.path) == hash(copy.path))){
+                                    (hash(original.path) == hash(copy.path)))
+                            {
                                 node.copies.append(copy.path);
-                                copyIt = copiesVector.erase(copyIt);
-                            }else{
-                                ++copyIt;
+                                indexed[copyIndex] = true;
                             }
                         }
                     }
-                    if(!node.copies.isEmpty()){
+                    if(!node.copies.isEmpty())
+                    {
+                        node.originalPath = original.path;
                         tree.append(node);
                     }
                 }
-                ++originalIt;
             }
         }
         it = range.second;
