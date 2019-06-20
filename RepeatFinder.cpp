@@ -24,20 +24,21 @@ static QByteArray fileHash(const QString &path)
 
 static QByteArray dirHash(const QString &path)
 {
-    QByteArray ret;
+    QCryptographicHash h(QCryptographicHash::Md5);
     qDebug() << __FUNCTION__ << __LINE__;
     auto entrylist = QDir(path).entryInfoList();
     for(auto &entry: entrylist){
         if(entry.isFile()){
-            ret += fileHash(entry.absoluteFilePath());
+            h.addData(fileHash(entry.absoluteFilePath()));
             qDebug() << __FUNCTION__ << __LINE__;
         }else if(entry.isDir() &&
                  entry.fileName() != "." &&
                  entry.fileName() != ".."){
-            ret += dirHash(entry.absoluteFilePath()) + '/';
+            h.addData(dirHash(entry.absoluteFilePath()));
             qDebug() << __FUNCTION__ << __LINE__;
         }
     }
+    QByteArray ret = h.result();
     qDebug() << __FUNCTION__ << path << ret;
     return ret;
 }
