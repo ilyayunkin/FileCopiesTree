@@ -88,14 +88,16 @@ void MainWindow::selectDir(bool checked)
 
     if(!dirPath.isEmpty()){
         QDateTime begin = QDateTime::currentDateTime();
-        {
+
             RepeatFinder finder;
             EqualsTree tree = finder.findCopies(dirPath);
 
             showTree(tree);
-        }
         QDateTime end = QDateTime::currentDateTime();
         qDebug() << "It took" << begin.secsTo(end) << "sec";
+        qDebug() << begin;
+        qDebug() << end;
+        qDebug() << "size" << tree.size();
     }
 }
 
