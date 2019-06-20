@@ -108,6 +108,8 @@ EqualsTree RepeatFinder::buildEqualsTree(const QVector<El> &v)
                         while(copyIt != copiesVector.end()){
                             auto copy = *copyIt;
                             if((original.path != copy.path) &&
+                                    (original.path.left(copy.path.length() + 1) != (copy.path + '/')) &&
+                                    (copy.path.left(original.path.length() + 1) != (original.path + '/')) &&
                                     (hash(original.path) == hash(copy.path))){
                                 node.copies.append(copy.path);
                                 copyIt = copiesVector.erase(copyIt);
