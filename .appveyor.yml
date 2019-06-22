@@ -1,0 +1,21 @@
+branches:
+  only:
+    - master
+    
+install:
+  - set QTDIR=C:\Qt\5.10.1\mingw53_32
+  - set PATH=%QTDIR%\bin;C:\Qt\Tools\mingw530_32\bin;%PATH%;
+  
+build_script:
+  - qmake CopiesFinder.pro
+  - mingw32-make
+  
+after_build:
+  - windeployqt release/CopiesFinder.exe
+  - rm release/*.o
+  - rm release/*.cpp
+
+#Note: artifacts path should be from root directory
+artifacts:
+  - path: CopiesFinder/release
+    type: zip
