@@ -15,6 +15,7 @@ class MainWindow : public QMainWindow
     QTreeWidget *treeWidget = nullptr;
     QLabel *imgLabel = nullptr;
     QLabel *infoLabel = nullptr;
+    QLabel *statusLabel = nullptr;
     QPushButton *deleteButton = nullptr;
     QString selectedPath;
 

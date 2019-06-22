@@ -25,10 +25,10 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
     setCentralWidget(new QWidget);
-    QHBoxLayout *mainLayout = new QHBoxLayout(centralWidget());
-    QSplitter *splitter = new QSplitter;
-    mainLayout->addWidget(splitter);
+    QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget());
     {
+        QSplitter *splitter = new QSplitter;
+        mainLayout->addWidget(splitter);
         {
             QWidget *w = new QWidget;
             QVBoxLayout *treeLayout = new QVBoxLayout(w);
@@ -73,6 +73,11 @@ MainWindow::MainWindow(QWidget *parent)
                         this, &MainWindow::deleteFile);
             }
         }
+        splitter->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
+    }
+    {
+        statusLabel = new QLabel;
+        mainLayout->addWidget(statusLabel);
     }
 }
 
@@ -94,17 +99,20 @@ void MainWindow::selectDir(bool checked)
 
             showTree(tree);
         QDateTime end = QDateTime::currentDateTime();
-        qDebug() << "It took" << begin.secsTo(end) << "sec";
+        auto secs = begin.secsTo(end);
+        qDebug() << "It took" << secs << "sec";
         qDebug() << begin;
         qDebug() << end;
         qDebug() << "size" << tree.size();
+        imgLabel->clear();
+        statusLabel->setText(QString("%1 copies found in %2 seconds").arg(tree.size()).arg(secs));
     }
 }
 
 void MainWindow::showTree(const EqualsTree& tree)
 {
-    imgLabel->clear();
     infoLabel->clear();
+    statusLabel->clear();
     treeWidget->clear();
     selectedPath.clear();
     deleteButton->hide();
