@@ -25,7 +25,7 @@ deploy:
   description: ' '
   provider: GitHub
   auth_token:
-    secure: e1K13ZmENgHItl5HRIuJJluDt975PLk9sXG9WG8yBs4uyXGQ7a0GOdAQ2uXhJuHi # your encrypted token from GitHub
+    secure: kZxtAoFhr8o/FxaROZgDAu3nfYkni4JhLAktZzvn5dalDITTjJm+ec47qW/ZJWZo # your encrypted token from GitHub
   artifact: release.zip            # upload all NuGet packages to release assets
   draft: false
   prerelease: false
