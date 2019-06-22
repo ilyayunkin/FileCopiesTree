@@ -17,5 +17,5 @@ after_build:
 
 #Note: artifacts path should be from root directory
 artifacts:
-  - path: CopiesFinder/release
+  - path: release
     type: zip
