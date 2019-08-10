@@ -17,16 +17,20 @@ class MainWindow : public QMainWindow
     QLabel *infoLabel = nullptr;
     QLabel *statusLabel = nullptr;
     QPushButton *deleteButton = nullptr;
-    QString selectedPath;
 
     void selectDir(bool checked);
     void showTree(const EqualsTree&tree);
     QIcon getIcon(const QString& path);
 
-    void  itemClicked(QTreeWidgetItem *item, int column);
+    void selectionChanged();
+    void itemClicked(QTreeWidgetItem *item, int column);
+    void itemSelected(QTreeWidgetItem *item);
     void itemDoubleClicked(QTreeWidgetItem *item, int column);
 
-    void deleteFile(bool triggered);
+    void deleteButtonClicked(bool triggered);
+    void keyPressEvent(QKeyEvent *event);
+    void deleteSelected();
+    void deleteItem(QTreeWidgetItem *item);
 
 public:
     MainWindow(QWidget *parent = 0);

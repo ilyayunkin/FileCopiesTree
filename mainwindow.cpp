@@ -12,6 +12,7 @@
 #include <QSplitter>
 #include <QHeaderView>
 #include <QTextCodec>
+#include <QKeyEvent>
 
 #include <assert.h>
 
@@ -44,10 +45,12 @@ MainWindow::MainWindow(QWidget *parent)
                 treeWidget->header()->hide();
                 treeLayout->addWidget(treeWidget);
 
-                connect(treeWidget, &QTreeWidget::itemDoubleClicked,
+                connect(treeWidget, &QTreeWidget::itemActivated,
                         this, &MainWindow::itemDoubleClicked);
                 connect(treeWidget, &QTreeWidget::itemClicked,
                         this, &MainWindow::itemClicked);
+                connect(treeWidget, &QTreeWidget::itemSelectionChanged,
+                        this, &MainWindow::selectionChanged);
             }
         }
         {
@@ -70,7 +73,7 @@ MainWindow::MainWindow(QWidget *parent)
                 deleteButton->hide();
 
                 connect(deleteButton, &QPushButton::clicked,
-                        this, &MainWindow::deleteFile);
+                        this, &MainWindow::deleteButtonClicked);
             }
         }
         splitter->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
@@ -114,7 +117,6 @@ void MainWindow::showTree(const EqualsTree& tree)
     infoLabel->clear();
     statusLabel->clear();
     treeWidget->clear();
-    selectedPath.clear();
     deleteButton->hide();
     treeWidget->setColumnCount(1);
     QList<QTreeWidgetItem *> items;
@@ -135,8 +137,13 @@ void MainWindow::showTree(const EqualsTree& tree)
 void  MainWindow::itemClicked(QTreeWidgetItem *item, int column)
 {
     Q_UNUSED(column);
+    itemSelected(item);
+}
+
+
+void  MainWindow::itemSelected(QTreeWidgetItem *item)
+{
     QString path = item->text(0);
-    selectedPath = path;
     deleteButton->show();
     imgLabel->setPixmap(ThumbnailedIconProvider().icon(path).pixmap(300, 300));
     QString sizeString;
@@ -161,6 +168,16 @@ void  MainWindow::itemClicked(QTreeWidgetItem *item, int column)
     infoLabel->setText(info);
 }
 
+void MainWindow::selectionChanged()
+{
+    auto selected = treeWidget->selectedItems();
+    if(!selected.isEmpty())
+    {
+        QTreeWidgetItem *item = selected.takeFirst();
+        itemSelected(item);
+    }
+}
+
 void  MainWindow::itemDoubleClicked(QTreeWidgetItem *item, int column)
 {
     Q_UNUSED(column);
@@ -170,29 +187,57 @@ void  MainWindow::itemDoubleClicked(QTreeWidgetItem *item, int column)
     QDesktopServices::openUrl(url);
 }
 
-void MainWindow::deleteFile(bool triggered)
+void MainWindow::deleteButtonClicked(bool triggered)
 {
     Q_UNUSED(triggered)
+    deleteSelected();
+}
+
+void MainWindow::deleteSelected()
+{
+    auto selected = treeWidget->selectedItems();
+    if(!selected.isEmpty())
+    {
+        QTreeWidgetItem *item = selected.takeFirst();
+        deleteItem(item);
+    }
+}
+
+void MainWindow::deleteItem(QTreeWidgetItem *item)
+{
+    const QString path = item->text(0);
     bool confirm =
             QMessageBox::question(this,
                                   tr("Confirm deleting"),
-                                  QString(tr("Do you really want to delete %1?")).arg(selectedPath)) ==
+                                  QString(tr("Do you really want to delete %1?")).arg(path)) ==
             QMessageBox::Yes;
 
     if(confirm){
-        qDebug() << selectedPath << " deletion confirmed";
-        bool removed = QDir().remove(selectedPath);
+        qDebug() << path << " deletion confirmed";
+        bool removed = QDir().remove(path);
 
         if(removed){
             QMessageBox::information(this,
                                      tr("File is removed"),
-                                     QString(tr("File %1 is removed")).arg(selectedPath));
-            qDebug() << selectedPath << " removed";
+                                     QString(tr("File %1 is removed")).arg(path));
+            qDebug() << path << " removed";
+            {/// Deletion of an item from widget
+                delete item;
+            }
         }else{
             QMessageBox::critical(this,
                                   tr("File is removed"),
-                                  QString(tr("File %1 is NOT removed")).arg(selectedPath));
-            qDebug() << selectedPath << " NOT removed!!!!!!!!";
+                                  QString(tr("File %1 is NOT removed")).arg(path));
+            qDebug() << path << " NOT removed!!!!!!!!";
         }
     }
+}
+
+void MainWindow::keyPressEvent(QKeyEvent *event)
+{
+    const int key = event->key();
+    if(key == Qt::Key_Delete){
+        deleteSelected();
+    }
+    event->accept();
 }
