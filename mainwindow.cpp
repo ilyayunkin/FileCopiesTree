@@ -221,8 +221,16 @@ void MainWindow::deleteItem(QTreeWidgetItem *item)
                                      tr("File is removed"),
                                      QString(tr("File %1 is removed")).arg(path));
             qDebug() << path << " removed";
+            QTreeWidgetItem *parent = item->parent();
             {/// Deletion of an item from widget
                 delete item;
+            }
+            if(parent != nullptr)
+            {/// Deletion parent item if it hasn't childs (copies of the file)
+                if(parent->childCount() == 0)
+                {
+                    delete parent;
+                }
             }
         }else{
             QMessageBox::critical(this,
