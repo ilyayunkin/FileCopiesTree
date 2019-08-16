@@ -97,10 +97,10 @@ void MainWindow::selectDir(bool checked)
     if(!dirPath.isEmpty()){
         QDateTime begin = QDateTime::currentDateTime();
 
-            RepeatFinder finder;
-            EqualsTree tree = finder.findCopies(dirPath);
+        RepeatFinder finder;
+        EqualsTree tree = finder.findCopies(dirPath);
 
-            showTree(tree);
+        showTree(tree);
         QDateTime end = QDateTime::currentDateTime();
         auto secs = begin.secsTo(end);
         qDebug() << "It took" << secs << "sec";
@@ -234,9 +234,28 @@ void MainWindow::deleteItem(QTreeWidgetItem *item)
             }
         }else{
             QMessageBox::critical(this,
-                                  tr("File is removed"),
+                                  tr("File isn't removed"),
                                   QString(tr("File %1 is NOT removed")).arg(path));
             qDebug() << path << " NOT removed!!!!!!!!";
+
+            bool confirmPermissions =
+                    QMessageBox::question(this, "Change permissions?", "Do you want to permit deleting?") ==
+                    QMessageBox::Yes;
+            if(confirmPermissions)
+            {
+                QFile file(path);
+                bool permissionsChanged = file.setPermissions(QFile::ReadOther | QFile::WriteOther);
+                if(permissionsChanged)
+                {
+                    QMessageBox::information(this, "Permissions changed", "Try to delete the file again.");
+                    qDebug() << path << " permitted";
+                }else{
+                    QMessageBox::critical(this,
+                                          tr("Permessions aren't changed"),
+                                          QString(tr("Permessions for file %1 are NOT changed")).arg(path));
+                    qDebug() << path << "Permessions for file are NOT changed";
+                }
+            }
         }
     }
 }
