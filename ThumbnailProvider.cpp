@@ -34,7 +34,7 @@ static HBITMAP Thumbnail(std::wstring File, long width = 300, long heigth = 300)
         return NULL;
     }
     hr = pDesktop->ParseDisplayName(NULL, NULL, (LPWSTR)Folder.c_str(), NULL, &pidl, NULL);
-    qDebug() << QString().fromWCharArray(Folder.c_str());
+    qDebug() << __FUNCTION__ << __LINE__ << QString().fromWCharArray(Folder.c_str());
     if(FAILED(hr))
     {
         qDebug() << __FUNCTION__ << __LINE__ << "!!!!!!!!!!!!";
@@ -47,7 +47,7 @@ static HBITMAP Thumbnail(std::wstring File, long width = 300, long heigth = 300)
         return NULL;
     }
     hr = pSub->ParseDisplayName(NULL, NULL, (LPWSTR)FileName.c_str(), NULL, &pidl, NULL);
-    qDebug() << QString().fromWCharArray(FileName.c_str());
+    qDebug() << __FUNCTION__ << __LINE__ << QString().fromWCharArray(FileName.c_str());
     if(FAILED(hr))
     {
         qDebug() << __FUNCTION__ << __LINE__ << "!!!!!!!!!!!!";

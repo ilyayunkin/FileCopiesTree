@@ -96,22 +96,26 @@ void MainWindow::selectDir(bool checked)
 
     if(!dirPath.isEmpty()){
         QDateTime begin = QDateTime::currentDateTime();
+        QDateTime showBegin;
 
         RepeatFinder finder;
         int size = 0;
         {
             EqualsTree tree = finder.findCopies(dirPath);
             size = tree.size();
+            showBegin = QDateTime::currentDateTime();
             showTree(tree);
         }
         QDateTime end = QDateTime::currentDateTime();
         auto secs = begin.secsTo(end);
-        qDebug() << "It took" << secs << "sec";
+        auto secsShow = showBegin.secsTo(end);
+        qDebug() << "It took" << secs << "sec" << QString("(%1 secons fow GUI)").arg(secsShow);
         qDebug() << begin;
+        qDebug() << showBegin;
         qDebug() << end;
         qDebug() << "size" << size;
         imgLabel->clear();
-        statusLabel->setText(QString("%1 copies found in %2 seconds").arg(size).arg(secs));
+        statusLabel->setText(QString("%1 copies found in %2 seconds (%3 secons fow GUI)").arg(size).arg(secs).arg(secsShow));
     }
 }
 
