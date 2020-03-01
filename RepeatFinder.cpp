@@ -97,6 +97,8 @@ EqualsTree RepeatFinder::buildEqualsTree(const QVector<El> &v)
         const auto &el = *it;
         auto range = std::equal_range(it, end, el);
         auto rangeSize = range.second - range.first;
+        qDebug()<<__FUNCTION__ << "rangeSize" << rangeSize;
+        if(rangeSize > 1)
         {
             bool indexed[rangeSize] = { 0 };
             QByteArray hashes[rangeSize];
@@ -108,8 +110,9 @@ EqualsTree RepeatFinder::buildEqualsTree(const QVector<El> &v)
                 {
                     const auto &original = *(range.first + originalIndex);
                     EqualNode node;
-                    for(int copyIndex = originalIndex; copyIndex < rangeSize; ++copyIndex)
+                    for(int copyIndex = originalIndex + 1; copyIndex < rangeSize; ++copyIndex)
                     {
+                        assert(copyIndex != originalIndex);
                         if(!indexed[copyIndex])
                         {
                             const auto &copy = *(range.first + copyIndex);
@@ -125,6 +128,7 @@ EqualsTree RepeatFinder::buildEqualsTree(const QVector<El> &v)
                                 {
                                     hashes[copyIndex] = hash(copy.path);
                                 }
+                                qDebug() << __FUNCTION__ << original.path << original.size<< "AND" << copy.path << copy. size;
                                 if(hashes[originalIndex] == hashes[copyIndex])
                                 {
                                     node.copies.append(copy.path);
