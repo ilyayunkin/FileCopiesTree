@@ -26,14 +26,13 @@ static QByteArray dirHash(const QString &path)
 {
     QCryptographicHash h(QCryptographicHash::Md5);
     qDebug() << __FUNCTION__ << __LINE__;
-    auto entrylist = QDir(path).entryInfoList();
+    QDir::Filters dirFilters = QDir::Dirs|QDir::Files|QDir::NoDotAndDotDot|QDir::System|QDir::Hidden;
+    auto entrylist = QDir(path).entryInfoList(dirFilters);
     for(auto &entry: entrylist){
         if(entry.isFile()){
             h.addData(fileHash(entry.absoluteFilePath()));
             qDebug() << __FUNCTION__ << __LINE__;
-        }else if(entry.isDir() &&
-                 entry.fileName() != "." &&
-                 entry.fileName() != ".."){
+        }else if(entry.isDir()){
             h.addData(dirHash(entry.absoluteFilePath()));
             qDebug() << __FUNCTION__ << __LINE__;
         }
@@ -151,24 +150,32 @@ EqualsTree RepeatFinder::buildEqualsTree(const QVector<El> &v)
     return tree;
 }
 
-void RepeatFinder::add(const QDir &dir, QVector<El> &fileVector, QVector<El> &dirVector)
+quint64 RepeatFinder::add(const QDir &dir, QVector<El> &fileVector, QVector<El> &dirVector)
 {
+    qint64 size = 0;
     assert(dir.exists());
 
-    auto entrylist = dir.entryInfoList();
+    QDir::Filters dirFilters = QDir::Dirs|QDir::Files|QDir::NoDotAndDotDot|QDir::System|QDir::Hidden;
+    auto entrylist = dir.entryInfoList(dirFilters);
     for(auto &entry: entrylist){
         if(entry.isFile()){
-            El el{entry.absoluteFilePath(), dirSize(entry.absoluteFilePath())};
+            qint64 entrySize = dirSize(entry.absoluteFilePath());
+            El el{entry.absoluteFilePath(), entrySize};
+
+            size+= entrySize;
             fileVector.push_back(el);
-        }else if(entry.isDir() &&
-                 entry.fileName() != "." &&
-                 entry.fileName() != ".."){
+        }else if(entry.isDir()){
             QDir d(entry.absoluteFilePath());
-            El el{entry.absoluteFilePath(), dirSize(entry.absoluteFilePath())};
-            dirVector.push_back(el);
+
             if(d.absolutePath() != dir.absolutePath()){
-                add(d, fileVector, dirVector);
+               qint64 entrySize = add(d, fileVector, dirVector);
+               size+= entrySize;
             }
         }
     }
+
+    El el{dir.absolutePath(), size};
+    dirVector.push_back(el);
+
+    return size;
 }

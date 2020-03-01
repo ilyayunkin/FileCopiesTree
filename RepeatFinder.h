@@ -34,7 +34,7 @@ public:
 
     EqualsTree findCopies(const QString &path);
 private:
-    void add(const QDir &dir, QVector<El> &fileVector, QVector<El> &dirVector);
+    quint64 add(const QDir &dir, QVector<El> &fileVector, QVector<El> &dirVector);
     /// Builds sorted by size list of files in dir and subdirs.
     void buildFilesList(const QString &path, QVector<El> &fileVector, QVector<El> &dirVector);
     EqualsTree buildEqualsTree(const QVector<El> &v);
