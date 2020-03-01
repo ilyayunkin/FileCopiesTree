@@ -130,11 +130,11 @@ void MainWindow::showTree(const EqualsTree& tree)
     for(const EqualNode &node : tree){
         QTreeWidgetItem *item = new QTreeWidgetItem((QTreeWidget*)0, QStringList(node.originalPath));
 
-        item->setIcon(0, ThumbnailedIconProvider().icon(node.originalPath));
+        item->setIcon(0, ThumbnailedIconProvider().icon(node.originalPath, true));
         items.append(item);
         for(const QString &copy :node.copies){
             QTreeWidgetItem *item1 = new QTreeWidgetItem((QTreeWidget*)0, QStringList(copy));
-            item1->setIcon(0, ThumbnailedIconProvider().icon(copy));
+            item1->setIcon(0, ThumbnailedIconProvider().icon(copy, true));
             item->addChild(item1);
         }
     }
@@ -221,7 +221,12 @@ void MainWindow::deleteItem(QTreeWidgetItem *item)
 
     if(confirm){
         qDebug() << path << " deletion confirmed";
-        bool removed = QDir().remove(path);
+        bool removed;
+        if(QFileInfo(path).isDir()){
+            removed = QDir(path).removeRecursively();
+        }else{
+            removed = QDir().remove(path);
+        }
 
         if(removed){
             QMessageBox::information(this,
