@@ -3,6 +3,7 @@
 #include <QFile>
 #include <QCryptographicHash>
 #include <QDebug>
+#include <QDirIterator>
 // C++ STL
 #include <algorithm>
 #include <assert.h>
@@ -42,8 +43,10 @@ QByteArray RepeatFinder::dirHash(const QString &path)
 //    qDebug() << __FUNCTION__ << __LINE__;
 
     QDir::Filters dirFilters = QDir::Dirs|QDir::Files|QDir::NoDotAndDotDot|QDir::System|QDir::Hidden;
-    auto entrylist = QDir(path).entryInfoList(dirFilters);
-    for(auto &entry: entrylist){
+    QDirIterator dirIterator(path, dirFilters);
+    while(dirIterator.hasNext())
+    {
+        auto entry = QFileInfo(dirIterator.next());
         if(entry.isFile()){
             h.addData(fileHash(entry.absoluteFilePath()));
 //            qDebug() << __FUNCTION__ << __LINE__;
@@ -320,8 +323,10 @@ quint64 RepeatFinder::add(const QDir &dir, QVector<El> &fileVector, QVector<El> 
     assert(dir.exists());
 
     QDir::Filters dirFilters = QDir::Dirs|QDir::Files|QDir::NoDotAndDotDot|QDir::System|QDir::Hidden;
-    auto entrylist = dir.entryInfoList(dirFilters);
-    for(auto &entry: entrylist){
+    QDirIterator dirIterator(dir.absolutePath(), dirFilters);
+    while(dirIterator.hasNext())
+    {
+        auto entry = QFileInfo(dirIterator.next());
         if(entry.isFile()){
             size+= addFile(entry.absoluteFilePath(), fileVector);
         }else if(entry.isDir()){
