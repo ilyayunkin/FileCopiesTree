@@ -30,6 +30,8 @@ class RepeatFinder
 {
     QVector<El> fileVector;
     QVector<El> dirVector;
+    QHash<QString, QByteArray> cache;
+    static const long cacheMinimum = 1024 * 1024 * 10; // 10 Mb
 
 public:
     RepeatFinder();
@@ -37,6 +39,7 @@ public:
     void makeIndexation(const QString &path);
     EqualsTree findCopies();
     EqualsTree findFile(const QString path);
+    EqualsTree diffFolder(const QString path);
 private:
     quint64 add(const QDir &dir, QVector<El> &fileVector, QVector<El> &dirVector);
     quint64 addFile(const QString path, QVector<El> &fileVector);
@@ -55,6 +58,12 @@ private:
     /// \param v
     /// \return
     EqualsTree buildFileEqualsTree(const QString path, const QVector<El> &v);
+
+    EqualsTree diff(QVector<El> v1, QVector<El> v2);
+
+    QByteArray fileHash(const QString &path);
+    QByteArray dirHash(const QString &path);
+    QByteArray hash(const El &el);
 };
 
 #endif // REPEATFINDER_H

@@ -17,11 +17,13 @@ class FolderAnalysisWidget : public QWidget
     QPushButton *deleteButton;
     QPushButton *findCopiesButton;
     QPushButton *findFileButton;
+    QPushButton *diffButton;
     QSharedPointer<RepeatFinder> repeatFinder;
 
     void indexDir(bool checked);
     void findCopies(bool checked);
     void findSpecifiedFile(bool checked);
+    void diffFolder(bool checked);
     void showTree(const EqualsTree&tree);
     void selectionChanged();
     void itemClicked(QTreeWidgetItem *item, int column);

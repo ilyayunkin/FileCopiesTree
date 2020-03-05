@@ -45,6 +45,13 @@ FolderAnalysisWidget::FolderAnalysisWidget(QWidget *parent) :
         findFileButton->setEnabled(false);
     }
     {
+        diffButton = new QPushButton(tr("Diff to backup"));
+        diffButton->setToolTip(tr("Finds files that aren't in the backup"));
+        connect(diffButton, &QPushButton::clicked, this, &FolderAnalysisWidget::diffFolder);
+        treeLayout->addWidget(diffButton);
+        diffButton->setEnabled(false);
+    }
+    {
         treeWidget = new QTreeWidget;
         treeWidget->header()->hide();
         treeLayout->addWidget(treeWidget);
@@ -82,6 +89,7 @@ void FolderAnalysisWidget::indexDir(bool checked)
         repeatFinder->makeIndexation(dirPath);
         findCopiesButton->setEnabled(true);
         findFileButton->setEnabled(true);
+        diffButton->setEnabled(true);
 
         QDateTime end = QDateTime::currentDateTime();
         auto secs = begin.secsTo(end);
@@ -147,6 +155,35 @@ void FolderAnalysisWidget::findSpecifiedFile(bool checked)
     }
 }
 
+void FolderAnalysisWidget::diffFolder(bool checked)
+{
+    Q_UNUSED(checked);
+
+    assert(!repeatFinder.isNull());
+
+    QString dirPath = QFileDialog::getExistingDirectory(this, tr("Select a dir"));
+
+    if(!dirPath.isEmpty()){
+        QDateTime begin = QDateTime::currentDateTime();
+        QDateTime showBegin;
+        int size = 0;
+        {
+            EqualsTree tree = repeatFinder->diffFolder(dirPath);
+            size = tree.size();
+            showBegin = QDateTime::currentDateTime();
+            showTree(tree);
+        }
+        QDateTime end = QDateTime::currentDateTime();
+        auto secs = begin.secsTo(end);
+        auto secsShow = showBegin.secsTo(end);
+        qDebug() << "It took" << secs << "sec" << QString("(%1 secons fow GUI)").arg(secsShow);
+        qDebug() << begin;
+        qDebug() << showBegin;
+        qDebug() << end;
+        qDebug() << "size" << size;
+        statusLabel->setText(QString("%1 copies found in %2 seconds (%3 secons fow GUI)").arg(size).arg(secs).arg(secsShow));
+    }
+}
 
 void FolderAnalysisWidget::showTree(const EqualsTree& tree)
 {
