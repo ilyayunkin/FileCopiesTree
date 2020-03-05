@@ -28,9 +28,21 @@ FolderAnalysisWidget::FolderAnalysisWidget(QWidget *parent) :
     QVBoxLayout *treeLayout = new QVBoxLayout(this);
     treeLayout->setMargin(0);
     {
-        QPushButton *pb = new QPushButton(tr("Select dir"));
-        connect(pb, &QPushButton::clicked, this, &FolderAnalysisWidget::selectDir);
-        treeLayout->addWidget(pb);
+        QPushButton *indexButton = new QPushButton(tr("Index dir"));
+        connect(indexButton, &QPushButton::clicked, this, &FolderAnalysisWidget::indexDir);
+        treeLayout->addWidget(indexButton);
+    }
+    {
+        findCopiesButton = new QPushButton(tr("Find copies"));
+        connect(findCopiesButton, &QPushButton::clicked, this, &FolderAnalysisWidget::findCopies);
+        treeLayout->addWidget(findCopiesButton);
+        findCopiesButton->setEnabled(false);
+    }
+    {
+        findFileButton = new QPushButton(tr("Find file"));
+        connect(findFileButton, &QPushButton::clicked, this, &FolderAnalysisWidget::findSpecifiedFile);
+        treeLayout->addWidget(findFileButton);
+        findFileButton->setEnabled(false);
     }
     {
         treeWidget = new QTreeWidget;
@@ -47,7 +59,7 @@ FolderAnalysisWidget::FolderAnalysisWidget(QWidget *parent) :
     {
         deleteButton = new QPushButton("delete");
         treeLayout->addWidget(deleteButton);
-        deleteButton->hide();
+        deleteButton->setEnabled(false);
 
         connect(deleteButton, &QPushButton::clicked,
                 this, &FolderAnalysisWidget::deleteButtonClicked);
@@ -58,19 +70,67 @@ FolderAnalysisWidget::FolderAnalysisWidget(QWidget *parent) :
     }
 }
 
-void FolderAnalysisWidget::selectDir(bool checked)
+void FolderAnalysisWidget::indexDir(bool checked)
 {
     Q_UNUSED(checked);
     QString dirPath = QFileDialog::getExistingDirectory(this, tr("Select dir"));
 
     if(!dirPath.isEmpty()){
         QDateTime begin = QDateTime::currentDateTime();
-        QDateTime showBegin;
 
-        RepeatFinder finder;
+        repeatFinder = QSharedPointer<RepeatFinder>(new RepeatFinder());
+        repeatFinder->makeIndexation(dirPath);
+        findCopiesButton->setEnabled(true);
+        findFileButton->setEnabled(true);
+
+        QDateTime end = QDateTime::currentDateTime();
+        auto secs = begin.secsTo(end);
+        qDebug() << "It took" << secs << "sec";
+        qDebug() << begin;
+        qDebug() << end;
+        statusLabel->setText(QString("Indexed in %1 seconds").arg(secs));
+    }
+}
+
+void FolderAnalysisWidget::findCopies(bool checked)
+{
+    Q_UNUSED(checked);
+
+    assert(!repeatFinder.isNull());
+    QDateTime begin = QDateTime::currentDateTime();
+    QDateTime showBegin;
+    int size = 0;
+    {
+        EqualsTree tree = repeatFinder->findCopies();
+        size = tree.size();
+        showBegin = QDateTime::currentDateTime();
+        showTree(tree);
+    }
+    QDateTime end = QDateTime::currentDateTime();
+    auto secs = begin.secsTo(end);
+    auto secsShow = showBegin.secsTo(end);
+    qDebug() << "It took" << secs << "sec" << QString("(%1 secons fow GUI)").arg(secsShow);
+    qDebug() << begin;
+    qDebug() << showBegin;
+    qDebug() << end;
+    qDebug() << "size" << size;
+    statusLabel->setText(QString("%1 copies found in %2 seconds (%3 secons fow GUI)").arg(size).arg(secs).arg(secsShow));
+}
+
+void FolderAnalysisWidget::findSpecifiedFile(bool checked)
+{
+    Q_UNUSED(checked);
+
+    assert(!repeatFinder.isNull());
+
+    QString dirPath = QFileDialog::getOpenFileName(this, tr("Select a file"));
+
+    if(!dirPath.isEmpty()){
+        QDateTime begin = QDateTime::currentDateTime();
+        QDateTime showBegin;
         int size = 0;
         {
-            EqualsTree tree = finder.findCopies(dirPath);
+            EqualsTree tree = repeatFinder->findFile(dirPath);
             size = tree.size();
             showBegin = QDateTime::currentDateTime();
             showTree(tree);
@@ -86,6 +146,7 @@ void FolderAnalysisWidget::selectDir(bool checked)
         statusLabel->setText(QString("%1 copies found in %2 seconds (%3 secons fow GUI)").arg(size).arg(secs).arg(secsShow));
     }
 }
+
 
 void FolderAnalysisWidget::showTree(const EqualsTree& tree)
 {
@@ -113,12 +174,12 @@ void  FolderAnalysisWidget::itemClicked(QTreeWidgetItem *item, int column)
     itemSelected(item);
 }
 
-
 void  FolderAnalysisWidget::itemSelected(QTreeWidgetItem *item)
 {
     QString path = item->text(0);
     deleteButton->show();
     emit selectedPath(path);
+    deleteButton->setEnabled(true);
 }
 
 void FolderAnalysisWidget::selectionChanged()
@@ -236,10 +297,10 @@ MainWindow::MainWindow(QWidget *parent)
         QSplitter *splitter = new QSplitter;
         mainLayout->addWidget(splitter);
         {
-          folderAnalysisWidget = new FolderAnalysisWidget;
-          connect(folderAnalysisWidget, FolderAnalysisWidget::selectedPath,
-                  this, MainWindow::showThumbnail);
-          splitter->addWidget(folderAnalysisWidget);
+            folderAnalysisWidget = new FolderAnalysisWidget;
+            connect(folderAnalysisWidget, FolderAnalysisWidget::selectedPath,
+                    this, MainWindow::showThumbnail);
+            splitter->addWidget(folderAnalysisWidget);
         }
         {
             QWidget *w = new QWidget;

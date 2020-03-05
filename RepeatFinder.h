@@ -28,16 +28,33 @@ typedef EqualsTree::iterator EqualsIterator;
 
 class RepeatFinder
 {
-public:
+    QVector<El> fileVector;
+    QVector<El> dirVector;
 
+public:
     RepeatFinder();
 
-    EqualsTree findCopies(const QString &path);
+    void makeIndexation(const QString &path);
+    EqualsTree findCopies();
+    EqualsTree findFile(const QString path);
 private:
     quint64 add(const QDir &dir, QVector<El> &fileVector, QVector<El> &dirVector);
+    quint64 addFile(const QString path, QVector<El> &fileVector);
+
     /// Builds sorted by size list of files in dir and subdirs.
     void buildFilesList(const QString &path, QVector<El> &fileVector, QVector<El> &dirVector);
-    EqualsTree buildEqualsTree(const QVector<El> &v);
+    /// \brief buildEqualsTree
+    /// \param inputEntriesVector
+    /// \return
+    EqualsTree buildEqualsTree(const QVector<El> &inputEntriesVector);
+    void buildEqualsTreeForElement(const El &el,
+                                   const QVector<El> &inputEntriesVector,
+                                   EqualsTree &tree);
+    /// \brief buildFileEqualsTree
+    /// \param path
+    /// \param v
+    /// \return
+    EqualsTree buildFileEqualsTree(const QString path, const QVector<El> &v);
 };
 
 #endif // REPEATFINDER_H

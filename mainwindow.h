@@ -15,8 +15,13 @@ class FolderAnalysisWidget : public QWidget
     QTreeWidget *treeWidget = nullptr;
     QLabel *statusLabel = nullptr;
     QPushButton *deleteButton;
+    QPushButton *findCopiesButton;
+    QPushButton *findFileButton;
+    QSharedPointer<RepeatFinder> repeatFinder;
 
-    void selectDir(bool checked);
+    void indexDir(bool checked);
+    void findCopies(bool checked);
+    void findSpecifiedFile(bool checked);
     void showTree(const EqualsTree&tree);
     void selectionChanged();
     void itemClicked(QTreeWidgetItem *item, int column);
