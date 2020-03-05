@@ -9,32 +9,44 @@
 
 #include "RepeatFinder.h"
 
-class MainWindow : public QMainWindow
+class FolderAnalysisWidget : public QWidget
 {
     Q_OBJECT
     QTreeWidget *treeWidget = nullptr;
-    QLabel *imgLabel = nullptr;
-    QLabel *infoLabel = nullptr;
     QLabel *statusLabel = nullptr;
-    QPushButton *deleteButton = nullptr;
+    QPushButton *deleteButton;
 
     void selectDir(bool checked);
     void showTree(const EqualsTree&tree);
-    QIcon getIcon(const QString& path);
-
     void selectionChanged();
     void itemClicked(QTreeWidgetItem *item, int column);
     void itemSelected(QTreeWidgetItem *item);
     void itemDoubleClicked(QTreeWidgetItem *item, int column);
-
     void deleteButtonClicked(bool triggered);
-    void keyPressEvent(QKeyEvent *event);
     void deleteSelected();
     void deleteItem(QTreeWidgetItem *item);
+    void keyPressEvent(QKeyEvent *event);
 
+public:
+    FolderAnalysisWidget(QWidget *parent = nullptr);
+
+signals:
+    void selectedPath(QString path);
+};
+
+class MainWindow : public QMainWindow
+{
+    Q_OBJECT
+
+    QLabel *imgLabel = nullptr;
+    QLabel *infoLabel = nullptr;
+    FolderAnalysisWidget *folderAnalysisWidget;
 public:
     MainWindow(QWidget *parent = 0);
     ~MainWindow();
+
+    void clearView();
+    void showThumbnail(QString path);
 };
 
 #endif // MAINWINDOW_H

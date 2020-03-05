@@ -22,74 +22,43 @@
 
 #include <QDateTime>
 
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
+FolderAnalysisWidget::FolderAnalysisWidget(QWidget *parent) :
+    QWidget(parent)
 {
-    setCentralWidget(new QWidget);
-    QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget());
+    QVBoxLayout *treeLayout = new QVBoxLayout(this);
+    treeLayout->setMargin(0);
     {
-        QSplitter *splitter = new QSplitter;
-        mainLayout->addWidget(splitter);
-        {
-            QWidget *w = new QWidget;
-            QVBoxLayout *treeLayout = new QVBoxLayout(w);
-            treeLayout->setMargin(0);
-            splitter->addWidget(w);
-            {
-                QPushButton *pb = new QPushButton(tr("Select dir"));
-                connect(pb, &QPushButton::clicked, this, &MainWindow::selectDir);
-                treeLayout->addWidget(pb);
-            }
-            {
-                treeWidget = new QTreeWidget;
-                treeWidget->header()->hide();
-                treeLayout->addWidget(treeWidget);
+        QPushButton *pb = new QPushButton(tr("Select dir"));
+        connect(pb, &QPushButton::clicked, this, &FolderAnalysisWidget::selectDir);
+        treeLayout->addWidget(pb);
+    }
+    {
+        treeWidget = new QTreeWidget;
+        treeWidget->header()->hide();
+        treeLayout->addWidget(treeWidget);
 
-                connect(treeWidget, &QTreeWidget::itemActivated,
-                        this, &MainWindow::itemDoubleClicked);
-                connect(treeWidget, &QTreeWidget::itemClicked,
-                        this, &MainWindow::itemClicked);
-                connect(treeWidget, &QTreeWidget::itemSelectionChanged,
-                        this, &MainWindow::selectionChanged);
-            }
-        }
-        {
-            QWidget *w = new QWidget;
-            QVBoxLayout *imgLayout = new QVBoxLayout(w);
-            imgLayout->setMargin(0);
-            splitter->addWidget(w);
-            {
-                imgLabel = new QLabel;
-                imgLayout->addWidget(imgLabel);
-            }
-            {
-                infoLabel = new QLabel;
-                infoLabel->setWordWrap(true);
-                imgLayout->addWidget(infoLabel);
-            }
-            {
-                deleteButton = new QPushButton("delete");
-                imgLayout->addWidget(deleteButton);
-                deleteButton->hide();
+        connect(treeWidget, &QTreeWidget::itemActivated,
+                this, &FolderAnalysisWidget::itemDoubleClicked);
+        connect(treeWidget, &QTreeWidget::itemClicked,
+                this, &FolderAnalysisWidget::itemClicked);
+        connect(treeWidget, &QTreeWidget::itemSelectionChanged,
+                this, &FolderAnalysisWidget::selectionChanged);
+    }
+    {
+        deleteButton = new QPushButton("delete");
+        treeLayout->addWidget(deleteButton);
+        deleteButton->hide();
 
-                connect(deleteButton, &QPushButton::clicked,
-                        this, &MainWindow::deleteButtonClicked);
-            }
-        }
-        splitter->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
+        connect(deleteButton, &QPushButton::clicked,
+                this, &FolderAnalysisWidget::deleteButtonClicked);
     }
     {
         statusLabel = new QLabel;
-        mainLayout->addWidget(statusLabel);
+        treeLayout->addWidget(statusLabel);
     }
 }
 
-MainWindow::~MainWindow()
-{
-
-}
-
-void MainWindow::selectDir(bool checked)
+void FolderAnalysisWidget::selectDir(bool checked)
 {
     Q_UNUSED(checked);
     QString dirPath = QFileDialog::getExistingDirectory(this, tr("Select dir"));
@@ -114,17 +83,14 @@ void MainWindow::selectDir(bool checked)
         qDebug() << showBegin;
         qDebug() << end;
         qDebug() << "size" << size;
-        imgLabel->clear();
         statusLabel->setText(QString("%1 copies found in %2 seconds (%3 secons fow GUI)").arg(size).arg(secs).arg(secsShow));
     }
 }
 
-void MainWindow::showTree(const EqualsTree& tree)
+void FolderAnalysisWidget::showTree(const EqualsTree& tree)
 {
-    infoLabel->clear();
     statusLabel->clear();
     treeWidget->clear();
-    deleteButton->hide();
     treeWidget->setColumnCount(1);
     QList<QTreeWidgetItem *> items;
     for(const EqualNode &node : tree){
@@ -141,41 +107,21 @@ void MainWindow::showTree(const EqualsTree& tree)
     treeWidget->insertTopLevelItems(0, items);
 }
 
-void  MainWindow::itemClicked(QTreeWidgetItem *item, int column)
+void  FolderAnalysisWidget::itemClicked(QTreeWidgetItem *item, int column)
 {
     Q_UNUSED(column);
     itemSelected(item);
 }
 
 
-void  MainWindow::itemSelected(QTreeWidgetItem *item)
+void  FolderAnalysisWidget::itemSelected(QTreeWidgetItem *item)
 {
     QString path = item->text(0);
     deleteButton->show();
-    imgLabel->setPixmap(ThumbnailedIconProvider().icon(path).pixmap(300, 300));
-    QString sizeString;
-    {
-        auto size = dirSize(path);
-        auto gb = size / 1024 / 1024 / 1024;
-        size = size % (1024 * 1024 * 1024);
-        auto mb = size / 1024 / 1024;
-        size = size % (1024 * 1024);
-        auto kb = size / 1024;
-        size = size % (1024);
-        auto b = size;
-
-        if(gb) sizeString += QString("%1 Gbytes ").arg(gb);
-        if(mb) sizeString += QString("%1 Mbytes ").arg(mb);
-        if(kb) sizeString += QString("%1 kbytes ").arg(kb);
-        if(b) sizeString += QString("%1 bytes ").arg(b);
-    }
-
-    QString info = QString(tr("Path:%1\r\n")).arg(path)+
-            QString("Size:%1").arg(sizeString);
-    infoLabel->setText(info);
+    emit selectedPath(path);
 }
 
-void MainWindow::selectionChanged()
+void FolderAnalysisWidget::selectionChanged()
 {
     auto selected = treeWidget->selectedItems();
     if(!selected.isEmpty())
@@ -185,7 +131,7 @@ void MainWindow::selectionChanged()
     }
 }
 
-void  MainWindow::itemDoubleClicked(QTreeWidgetItem *item, int column)
+void  FolderAnalysisWidget::itemDoubleClicked(QTreeWidgetItem *item, int column)
 {
     Q_UNUSED(column);
     QString path = item->text(0);
@@ -194,13 +140,7 @@ void  MainWindow::itemDoubleClicked(QTreeWidgetItem *item, int column)
     QDesktopServices::openUrl(url);
 }
 
-void MainWindow::deleteButtonClicked(bool triggered)
-{
-    Q_UNUSED(triggered)
-    deleteSelected();
-}
-
-void MainWindow::deleteSelected()
+void FolderAnalysisWidget::deleteSelected()
 {
     auto selected = treeWidget->selectedItems();
     if(!selected.isEmpty())
@@ -210,7 +150,7 @@ void MainWindow::deleteSelected()
     }
 }
 
-void MainWindow::deleteItem(QTreeWidgetItem *item)
+void FolderAnalysisWidget::deleteItem(QTreeWidgetItem *item)
 {
     const QString path = item->text(0);
     bool confirm =
@@ -272,11 +212,86 @@ void MainWindow::deleteItem(QTreeWidgetItem *item)
     }
 }
 
-void MainWindow::keyPressEvent(QKeyEvent *event)
+void FolderAnalysisWidget::keyPressEvent(QKeyEvent *event)
 {
     const int key = event->key();
     if(key == Qt::Key_Delete){
         deleteSelected();
     }
     event->accept();
+}
+
+void FolderAnalysisWidget::deleteButtonClicked(bool triggered)
+{
+    Q_UNUSED(triggered)
+    deleteSelected();
+}
+
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent)
+{
+    setCentralWidget(new QWidget);
+    QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget());
+    {
+        QSplitter *splitter = new QSplitter;
+        mainLayout->addWidget(splitter);
+        {
+          folderAnalysisWidget = new FolderAnalysisWidget;
+          connect(folderAnalysisWidget, FolderAnalysisWidget::selectedPath,
+                  this, MainWindow::showThumbnail);
+          splitter->addWidget(folderAnalysisWidget);
+        }
+        {
+            QWidget *w = new QWidget;
+            QVBoxLayout *imgLayout = new QVBoxLayout(w);
+            imgLayout->setMargin(0);
+            splitter->addWidget(w);
+            {
+                imgLabel = new QLabel;
+                imgLayout->addWidget(imgLabel);
+            }
+            {
+                infoLabel = new QLabel;
+                infoLabel->setWordWrap(true);
+                imgLayout->addWidget(infoLabel);
+            }
+        }
+        splitter->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
+    }
+}
+
+MainWindow::~MainWindow()
+{
+
+}
+
+void MainWindow::clearView()
+{
+    infoLabel->clear();
+    imgLabel->clear();
+}
+
+void MainWindow::showThumbnail(QString path)
+{
+    imgLabel->setPixmap(ThumbnailedIconProvider().icon(path).pixmap(300, 300));
+    QString sizeString;
+    {
+        auto size = dirSize(path);
+        auto gb = size / 1024 / 1024 / 1024;
+        size = size % (1024 * 1024 * 1024);
+        auto mb = size / 1024 / 1024;
+        size = size % (1024 * 1024);
+        auto kb = size / 1024;
+        size = size % (1024);
+        auto b = size;
+
+        if(gb) sizeString += QString("%1 Gbytes ").arg(gb);
+        if(mb) sizeString += QString("%1 Mbytes ").arg(mb);
+        if(kb) sizeString += QString("%1 kbytes ").arg(kb);
+        if(b) sizeString += QString("%1 bytes ").arg(b);
+    }
+
+    QString info = QString(tr("Path:%1\r\n")).arg(path)+
+            QString("Size:%1").arg(sizeString);
+    infoLabel->setText(info);
 }
