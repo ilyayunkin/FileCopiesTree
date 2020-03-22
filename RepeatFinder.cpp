@@ -8,8 +8,6 @@
 #include <algorithm>
 #include <assert.h>
 
-#include "DirSize.h"
-
 QByteArray RepeatFinder::fileHash(const QString &path)
 {
     QByteArray ret;
@@ -73,10 +71,9 @@ QByteArray RepeatFinder::hash(const El &el)
         if(entry.isFile())
         {
             ret = fileHash(el.path);
-        }else if(entry.isDir() &&
-                 entry.fileName() != "." &&
-                 entry.fileName() != "..")
+        }else if(entry.isDir())
         {
+            assert(entry.fileName() != "." && entry.fileName() != "..");
             ret = dirHash(el.path);
             if(el.size > cacheMinimum)
             {
@@ -192,7 +189,7 @@ EqualsTree RepeatFinder::diff(QVector<El> v1, QVector<El> v2)
 EqualsTree RepeatFinder::buildFileEqualsTree(const QString path, const QVector<El> &v)
 {
     EqualsTree tree;
-    qint64 entrySize = dirSize(path);
+    qint64 entrySize = QFile(path).size();
     El el{path, entrySize};
     buildEqualsTreeForElement(el, v, tree);
     return tree;
@@ -310,7 +307,7 @@ EqualsTree RepeatFinder::buildEqualsTree(const QVector<El> &inputEntriesVector)
 
 quint64 RepeatFinder::addFile(const QString path, QVector<El> &fileVector)
 {
-    qint64 entrySize = dirSize(path);
+    qint64 entrySize = QFile(path).size();
     El el{path, entrySize};
 
     fileVector.push_back(el);

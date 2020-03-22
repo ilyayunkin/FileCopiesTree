@@ -31,7 +31,7 @@ class RepeatFinder
     QVector<El> fileVector;
     QVector<El> dirVector;
     QHash<QString, QByteArray> cache;
-    static const long cacheMinimum = 1024 * 1024 * 10; // 10 Mb
+    static const long cacheMinimum = 1024 * 1024 * 2; // 2 Mb
 
 public:
     RepeatFinder();
@@ -46,17 +46,17 @@ private:
 
     /// Builds sorted by size list of files in dir and subdirs.
     void buildFilesList(const QString &path, QVector<El> &fileVector, QVector<El> &dirVector);
-    /// \brief buildEqualsTree
-    /// \param inputEntriesVector
-    /// \return
+    /// \brief Builds A tree where each branch represents copies of the same file.
+    /// \param inputEntriesVector - a sorted by size vector of files.
+    /// \returns the tree.
     EqualsTree buildEqualsTree(const QVector<El> &inputEntriesVector);
     void buildEqualsTreeForElement(const El &el,
                                    const QVector<El> &inputEntriesVector,
                                    EqualsTree &tree);
-    /// \brief buildFileEqualsTree
-    /// \param path
-    /// \param v
-    /// \return
+    /// \brief Builds A tree where each branch represents copies of the file by "path".
+    /// \param path - the path to the file.
+    /// \param v - a sorted by size vector of files.
+    /// \returns the tree.
     EqualsTree buildFileEqualsTree(const QString path, const QVector<El> &v);
 
     EqualsTree diff(QVector<El> v1, QVector<El> v2);
