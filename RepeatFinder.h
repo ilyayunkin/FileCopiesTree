@@ -7,7 +7,7 @@
 struct El
 {
     QString path;
-    qint64 size;
+    qint32 size;
 
     bool operator <(const struct El &other) const
     {
@@ -41,8 +41,8 @@ public:
     EqualsTree findFile(const QString path);
     EqualsTree diffFolder(const QString path);
 private:
-    quint64 add(const QDir &dir, QVector<El> &fileVector, QVector<El> &dirVector);
-    quint64 addFile(const QString path, QVector<El> &fileVector);
+    qint32 add(const QDir &dir, QVector<El> &fileVector, QVector<El> &dirVector);
+    qint32 addFile(const QString path, QVector<El> &fileVector);
 
     /// Builds sorted by size list of files in dir and subdirs.
     void buildFilesList(const QString &path, QVector<El> &fileVector, QVector<El> &dirVector);

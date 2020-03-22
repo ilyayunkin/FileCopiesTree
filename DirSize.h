@@ -2,6 +2,6 @@
 #define DIRSIZE_H
 
 #include <QString>
-qint64 dirSize(const QString &dirPath);
+qint32 dirSize(const QString &dirPath);
 
 #endif // DIRSIZE_H

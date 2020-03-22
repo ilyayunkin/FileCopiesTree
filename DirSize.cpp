@@ -5,10 +5,10 @@
 #include <QDir>
 #include <QDebug>
 
-qint64 dirSize(const QString &dirPath)
+qint32 dirSize(const QString &dirPath)
 {
     QFileInfo info(dirPath);
-    qint64 size = 0;
+    qint32 size = 0;
     if(info.isDir())
     {
         QDir dir(dirPath);

@@ -130,13 +130,13 @@ EqualsTree RepeatFinder::diff(QVector<El> v1, QVector<El> v2)
     {
         const El &el = *it;
         auto range = std::equal_range(it, end, el);
-        auto rangeSize = range.second - range.first;
-        auto rangeOther = std::equal_range(itOther, v2.cend(), el);
-        auto rangeOtherSize = rangeOther.second - rangeOther.first;
 
-//        qDebug()<<__FUNCTION__ << "rangeSize" << rangeSize << rangeOtherSize;
-        if(rangeSize > 0)
+        if(range.second != range.first)
         {
+            auto rangeSize = range.second - range.first;
+            //        qDebug()<<__FUNCTION__ << "rangeSize" << rangeSize << rangeOtherSize;
+            auto rangeOther = std::equal_range(itOther, v2.cend(), el);
+            auto rangeOtherSize = rangeOther.second - rangeOther.first;
             QByteArray hashes[rangeSize];
             QByteArray hashesOther[rangeSize];
 
@@ -189,7 +189,7 @@ EqualsTree RepeatFinder::diff(QVector<El> v1, QVector<El> v2)
 EqualsTree RepeatFinder::buildFileEqualsTree(const QString path, const QVector<El> &v)
 {
     EqualsTree tree;
-    qint64 entrySize = QFile(path).size();
+    qint32 entrySize = QFile(path).size();
     El el{path, entrySize};
     buildEqualsTreeForElement(el, v, tree);
     return tree;
@@ -208,10 +208,10 @@ void RepeatFinder::buildFilesList(const QString &path, QVector<El> &fileVector, 
 void RepeatFinder::buildEqualsTreeForElement(const El &el, const QVector<El> &inputEntriesVector, EqualsTree &tree)
 {
     auto range = std::equal_range(inputEntriesVector.cbegin(), inputEntriesVector.cend(), el);
-    auto rangeSize = range.second - range.first;
-//    qDebug()<<__FUNCTION__ << "rangeSize" << rangeSize;
-    if(rangeSize > 0)
+    if(range.second != range.first)
     {
+        auto rangeSize = range.second - range.first;
+    //    qDebug()<<__FUNCTION__ << "rangeSize" << rangeSize;
         const El &original = el;
         QByteArray originalHash = hash(el);
         EqualNode node;
@@ -305,18 +305,18 @@ EqualsTree RepeatFinder::buildEqualsTree(const QVector<El> &inputEntriesVector)
     return tree;
 }
 
-quint64 RepeatFinder::addFile(const QString path, QVector<El> &fileVector)
+qint32 RepeatFinder::addFile(const QString path, QVector<El> &fileVector)
 {
-    qint64 entrySize = QFile(path).size();
+    qint32 entrySize = QFile(path).size();
     El el{path, entrySize};
 
     fileVector.push_back(el);
     return entrySize;
 }
 
-quint64 RepeatFinder::add(const QDir &dir, QVector<El> &fileVector, QVector<El> &dirVector)
+qint32 RepeatFinder::add(const QDir &dir, QVector<El> &fileVector, QVector<El> &dirVector)
 {
-    qint64 size = 0;
+    qint32 size = 0;
     assert(dir.exists());
 
     QDir::Filters dirFilters = QDir::Dirs|QDir::Files|QDir::NoDotAndDotDot|QDir::System|QDir::Hidden;
@@ -330,7 +330,7 @@ quint64 RepeatFinder::add(const QDir &dir, QVector<El> &fileVector, QVector<El> 
             QDir d(entry.absoluteFilePath());
 
             if(d.absolutePath() != dir.absolutePath()){
-                qint64 entrySize = add(d, fileVector, dirVector);
+                qint32 entrySize = add(d, fileVector, dirVector);
                 size+= entrySize;
             }
         }
