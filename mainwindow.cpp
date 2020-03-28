@@ -85,7 +85,7 @@ void FolderAnalysisWidget::indexDir(bool checked)
     if(!dirPath.isEmpty()){
         QDateTime begin = QDateTime::currentDateTime();
 
-        repeatFinder = QSharedPointer<RepeatFinder>(new RepeatFinder());
+        repeatFinder = QSharedPointer<RepeatFinder>::create();
         repeatFinder->makeIndexation(dirPath);
         findCopiesButton->setEnabled(true);
         findFileButton->setEnabled(true);
