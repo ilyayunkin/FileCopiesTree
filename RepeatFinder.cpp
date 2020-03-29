@@ -8,6 +8,18 @@
 #include <algorithm>
 #include <assert.h>
 
+class Compare
+{
+public:
+    bool operator()(const El &el1, const El &el2)
+    {
+        static int i = 0;
+        i++;
+        qDebug() << __FUNCTION__ << i;
+        return el1 < el2;
+    }
+};
+
 QByteArray RepeatFinder::fileHash(const QString &path)
 {
     QByteArray ret;
@@ -129,13 +141,15 @@ EqualsTree RepeatFinder::diff(QVector<El> v1, QVector<El> v2)
     while(it != end)
     {
         const El &el = *it;
-        auto range = std::equal_range(it, end, el);
+//        auto range = std::equal_range(it, end, el/*, Compare()*/);
+        std::pair<ElConstIterator, ElConstIterator> range(it, it);
+        range.second = std::upper_bound(it, end, el/*, Compare()*/);
 
         if(range.second != range.first)
         {
             auto rangeSize = range.second - range.first;
             //        qDebug()<<__FUNCTION__ << "rangeSize" << rangeSize << rangeOtherSize;
-            auto rangeOther = std::equal_range(itOther, v2.cend(), el);
+            auto rangeOther = std::equal_range(itOther, v2.cend(), el/*, Compare()*/);
             auto rangeOtherSize = rangeOther.second - rangeOther.first;
             QByteArray hashes[rangeSize];
             QByteArray hashesOther[rangeSize];
@@ -207,7 +221,7 @@ void RepeatFinder::buildFilesList(const QString &path, QVector<El> &fileVector, 
 
 void RepeatFinder::buildEqualsTreeForElement(const El &el, const QVector<El> &inputEntriesVector, EqualsTree &tree)
 {
-    auto range = std::equal_range(inputEntriesVector.cbegin(), inputEntriesVector.cend(), el);
+    auto range = std::equal_range(inputEntriesVector.cbegin(), inputEntriesVector.cend(), el/*, Compare()*/);
     if(range.second != range.first)
     {
         auto rangeSize = range.second - range.first;
@@ -249,7 +263,9 @@ EqualsTree RepeatFinder::buildEqualsTree(const QVector<El> &inputEntriesVector)
     while((it != end) && ((it + 1) != end))
     {
         const El &el = *it;
-        auto range = std::equal_range(it, end, el);
+        //auto range = std::equal_range(it, end, el/*, Compare()*/);
+        std::pair<ElConstIterator, ElConstIterator> range(it, it);
+        range.second = std::upper_bound(it, end, el/*, Compare()*/);
         auto rangeSize = range.second - range.first;
         qDebug()<<__FUNCTION__ << "rangeSize" << rangeSize;
         if(rangeSize > 1)
