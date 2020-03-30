@@ -8,11 +8,6 @@ struct El
 {
     QString path;
     qint32 size;
-
-    bool operator <(const struct El &other) const
-    {
-        return size < other.size;
-    }
 };
 typedef QVector<El> ElVector;
 typedef QVector<El>::iterator ElIterator;

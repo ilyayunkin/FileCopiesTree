@@ -8,15 +8,44 @@
 #include <algorithm>
 #include <assert.h>
 
-class Compare
+#define COMPARISONS_COUNT_TRACE     0
+#define HASH_CACHE_TRACE            0
+
+
+#if COMPARISONS_COUNT_TRACE
+static int comparisonsCount = 0;
+#endif
+
+bool lessSize(const El &el1, const El &el2)
 {
+#if COMPARISONS_COUNT_TRACE
+    comparisonsCount++;
+    qDebug() << __FUNCTION__ << comparisonsCount;
+#endif
+    return el1.size < el2.size;
+}
+
+bool equalSize(El const &c1, El const &c2)
+{
+#if COMPARISONS_COUNT_TRACE
+    comparisonsCount++;
+    qDebug() << __FUNCTION__ << comparisonsCount;
+#endif
+    return c1.size == c2.size;
+};
+
+class EqualSizeFunctor
+{
+    const El&el;
 public:
-    bool operator()(const El &el1, const El &el2)
+    EqualSizeFunctor(const El&el) :el(el){};
+    bool operator()(El const &c)
     {
-        static int i = 0;
-        i++;
-        qDebug() << __FUNCTION__ << i;
-        return el1 < el2;
+#if COMPARISONS_COUNT_TRACE
+        comparisonsCount++;
+        qDebug() << __FUNCTION__ << comparisonsCount;
+#endif
+        return c.size == el.size;
     }
 };
 
@@ -27,20 +56,24 @@ QByteArray RepeatFinder::fileHash(const QString &path)
     auto size = f.size();
     if(size > cacheMinimum && !(ret = cache.value(path)).isNull())
     {
+#if HASH_CACHE_TRACE
         qDebug() << __FUNCTION__ << __LINE__ << "!!!!!!!" << path;
+#endif
     }else
     {
         if(f.open(QIODevice::ReadOnly)){
             QCryptographicHash h(QCryptographicHash::Md5);
             h.addData(&f);
             ret = h.result();
-//            qDebug() << __FUNCTION__ << path << ret;
+            //            qDebug() << __FUNCTION__ << path << ret;
         }
 
         if(size > cacheMinimum)
         {
             cache.insert(path, ret);
+#if HASH_CACHE_TRACE
             qDebug() << __FUNCTION__ << __LINE__ << "????????" << path;
+#endif
         }
     }
 
@@ -50,7 +83,7 @@ QByteArray RepeatFinder::fileHash(const QString &path)
 QByteArray RepeatFinder::dirHash(const QString &path)
 {
     QCryptographicHash h(QCryptographicHash::Md5);
-//    qDebug() << __FUNCTION__ << __LINE__;
+    //    qDebug() << __FUNCTION__ << __LINE__;
 
     QDir::Filters dirFilters = QDir::Dirs|QDir::Files|QDir::NoDotAndDotDot|QDir::System|QDir::Hidden;
     QDirIterator dirIterator(path, dirFilters);
@@ -59,14 +92,14 @@ QByteArray RepeatFinder::dirHash(const QString &path)
         auto entry = QFileInfo(dirIterator.next());
         if(entry.isFile()){
             h.addData(fileHash(entry.absoluteFilePath()));
-//            qDebug() << __FUNCTION__ << __LINE__;
+            //            qDebug() << __FUNCTION__ << __LINE__;
         }else if(entry.isDir()){
             h.addData(dirHash(entry.absoluteFilePath()));
-//            qDebug() << __FUNCTION__ << __LINE__;
+            //            qDebug() << __FUNCTION__ << __LINE__;
         }
     }
     QByteArray ret = h.result();
-//    qDebug() << __FUNCTION__ << path << ret;
+    //    qDebug() << __FUNCTION__ << path << ret;
     return ret;
 }
 
@@ -76,7 +109,9 @@ QByteArray RepeatFinder::hash(const El &el)
 
     if(el.size > cacheMinimum && !(ret = cache.value(el.path)).isNull())
     {
+#if HASH_CACHE_TRACE
         qDebug() << __FUNCTION__ << __LINE__ << "!!!!!!!" << el.path;
+#endif
     }else
     {
         QFileInfo entry(el.path);
@@ -89,12 +124,14 @@ QByteArray RepeatFinder::hash(const El &el)
             ret = dirHash(el.path);
             if(el.size > cacheMinimum)
             {
+#if HASH_CACHE_TRACE
                 qDebug() << __FUNCTION__ << __LINE__ << "????????" << el.path;
+#endif
                 cache.insert(el.path, ret);
             }
         }
     }
-//    qDebug() << __FUNCTION__ << el.path << ret;
+    //    qDebug() << __FUNCTION__ << el.path << ret;
     return ret;
 }
 
@@ -138,19 +175,19 @@ EqualsTree RepeatFinder::diff(QVector<El> v1, QVector<El> v2)
     ElConstIterator itOther = v2.cbegin();
     ElConstIterator end = v1.cend();
 
-    while(it != end)
+    while((it = std::adjacent_find(it, end, equalSize)) != end)
     {
         const El &el = *it;
-//        auto range = std::equal_range(it, end, el/*, Compare()*/);
+        //        auto range = std::equal_range(it, end, el, lessSize);
         std::pair<ElConstIterator, ElConstIterator> range(it, it);
-//        range.second = std::upper_bound(it, end, el/*, Compare()*/);
-        range.second = std::find_if_not(it, end, [&el](El const &c){return c.size == el.size;});
+        //        range.second = std::upper_bound(it, end, el, lessSize);
+        range.second = std::find_if_not(it + 1, end, EqualSizeFunctor(el));
 
-        if(range.second != range.first)
+        //        if(range.second != range.first)
         {
             auto rangeSize = range.second - range.first;
             //        qDebug()<<__FUNCTION__ << "rangeSize" << rangeSize << rangeOtherSize;
-            auto rangeOther = std::equal_range(itOther, v2.cend(), el/*, Compare()*/);
+            auto rangeOther = std::equal_range(itOther, v2.cend(), el, lessSize);
             auto rangeOtherSize = rangeOther.second - rangeOther.first;
             QByteArray hashes[rangeSize];
             QByteArray hashesOther[rangeSize];
@@ -175,7 +212,7 @@ EqualsTree RepeatFinder::diff(QVector<El> v1, QVector<El> v2)
                         {
                             hashesOther[copyIndex] = hash(copy);
                         }
-//                        qDebug() << __FUNCTION__ << original.path << original.size<< "AND" << copy.path << copy. size;
+                        //                        qDebug() << __FUNCTION__ << original.path << original.size<< "AND" << copy.path << copy. size;
                         if(hashes[originalIndex] == hashesOther[copyIndex])
                         {
                             node.copies.append(copy.path);
@@ -216,17 +253,20 @@ void RepeatFinder::buildFilesList(const QString &path, QVector<El> &fileVector, 
     QDir dir(path);
     add(dir, fileVector, dirVector);
 
-    std::sort(std::begin(fileVector), std::end(fileVector));
-    std::sort(std::begin(dirVector), std::end(dirVector));
+    std::sort(std::begin(fileVector), std::end(fileVector), lessSize);
+    std::sort(std::begin(dirVector), std::end(dirVector), lessSize);
+#if COMPARISONS_COUNT_TRACE
+    comparisonsCount = 0;
+#endif
 }
 
 void RepeatFinder::buildEqualsTreeForElement(const El &el, const QVector<El> &inputEntriesVector, EqualsTree &tree)
 {
-    auto range = std::equal_range(inputEntriesVector.cbegin(), inputEntriesVector.cend(), el/*, Compare()*/);
+    auto range = std::equal_range(inputEntriesVector.cbegin(), inputEntriesVector.cend(), el, lessSize);
     if(range.second != range.first)
     {
         auto rangeSize = range.second - range.first;
-    //    qDebug()<<__FUNCTION__ << "rangeSize" << rangeSize;
+        //    qDebug()<<__FUNCTION__ << "rangeSize" << rangeSize;
         const El &original = el;
         QByteArray originalHash = hash(el);
         EqualNode node;
@@ -239,7 +279,7 @@ void RepeatFinder::buildEqualsTreeForElement(const El &el, const QVector<El> &in
             {
                 QByteArray copyHash = hash(copy);
 
-//                qDebug() << __FUNCTION__ << original.path << original.size<< "AND" << copy.path << copy.size;
+                //                qDebug() << __FUNCTION__ << original.path << original.size<< "AND" << copy.path << copy.size;
                 if(originalHash == copyHash)
                 {
                     node.copies.append(copy.path);
@@ -261,17 +301,18 @@ EqualsTree RepeatFinder::buildEqualsTree(const QVector<El> &inputEntriesVector)
     ElConstIterator it = inputEntriesVector.cbegin();
 
     auto end = inputEntriesVector.cend();
-    while((it != end) && ((it + 1) != end))
+
+    while(((it = std::adjacent_find(it, end, equalSize)) != end) && ((it + 1) != end))
     {
         const El &el = *it;
-        //auto range = std::equal_range(it, end, el/*, Compare()*/);
+        //auto range = std::equal_range(it, end, el, lessSize);
         std::pair<ElConstIterator, ElConstIterator> range(it, it);
-//        range.second = std::upper_bound(it, end, el/*, Compare()*/);
-        range.second = std::find_if_not(it, end, [&el](El const &c){return c.size == el.size;});
+        //        range.second = std::upper_bound(it, end, el, lessSize);
+        range.second = std::find_if_not(it +1, end, EqualSizeFunctor(el));
 
         auto rangeSize = range.second - range.first;
-        qDebug()<<__FUNCTION__ << "rangeSize" << rangeSize;
-        if(rangeSize > 1)
+        //        qDebug()<<__FUNCTION__ << "rangeSize" << rangeSize;
+        //if(rangeSize > 1)
         {
             bool indexed[rangeSize] = { 0 };
             QByteArray hashes[rangeSize];
@@ -301,7 +342,7 @@ EqualsTree RepeatFinder::buildEqualsTree(const QVector<El> &inputEntriesVector)
                                 {
                                     hashes[copyIndex] = hash(copy);
                                 }
-//                                qDebug() << __FUNCTION__ << original.path << original.size<< "AND" << copy.path << copy. size;
+                                //                                qDebug() << __FUNCTION__ << original.path << original.size<< "AND" << copy.path << copy. size;
                                 if(hashes[originalIndex] == hashes[copyIndex])
                                 {
                                     node.copies.append(copy.path);
