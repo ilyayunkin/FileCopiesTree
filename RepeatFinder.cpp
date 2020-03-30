@@ -143,7 +143,8 @@ EqualsTree RepeatFinder::diff(QVector<El> v1, QVector<El> v2)
         const El &el = *it;
 //        auto range = std::equal_range(it, end, el/*, Compare()*/);
         std::pair<ElConstIterator, ElConstIterator> range(it, it);
-        range.second = std::upper_bound(it, end, el/*, Compare()*/);
+//        range.second = std::upper_bound(it, end, el/*, Compare()*/);
+        range.second = std::find_if_not(it, end, [&el](El const &c){return c.size == el.size;});
 
         if(range.second != range.first)
         {
@@ -265,7 +266,9 @@ EqualsTree RepeatFinder::buildEqualsTree(const QVector<El> &inputEntriesVector)
         const El &el = *it;
         //auto range = std::equal_range(it, end, el/*, Compare()*/);
         std::pair<ElConstIterator, ElConstIterator> range(it, it);
-        range.second = std::upper_bound(it, end, el/*, Compare()*/);
+//        range.second = std::upper_bound(it, end, el/*, Compare()*/);
+        range.second = std::find_if_not(it, end, [&el](El const &c){return c.size == el.size;});
+
         auto rangeSize = range.second - range.first;
         qDebug()<<__FUNCTION__ << "rangeSize" << rangeSize;
         if(rangeSize > 1)
