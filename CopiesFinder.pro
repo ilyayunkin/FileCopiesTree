@@ -10,7 +10,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets winextras
 
 TARGET = CopiesFinder
 TEMPLATE = app
-QMAKE_CXXFLAGS+= -Wall -Werror
+QMAKE_CXXFLAGS+= -Wall -Werror -Wextra
 LIBS+=-luuid -lgdi32
 
 # The following define makes your compiler emit warnings if you use

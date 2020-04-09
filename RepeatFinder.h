@@ -1,7 +1,7 @@
 #ifndef REPEATFINDER_H
 #define REPEATFINDER_H
 
-#include <QVector>
+#include <vector>
 #include <QDir>
 
 struct El
@@ -9,24 +9,24 @@ struct El
     QString path;
     qint32 size;
 };
-typedef QVector<El> ElVector;
-typedef QVector<El>::iterator ElIterator;
-typedef QVector<El>::const_iterator ElConstIterator;
+typedef std::vector<El> ElVector;
+typedef std::vector<El>::iterator ElIterator;
+typedef std::vector<El>::const_iterator ElConstIterator;
 
 struct EqualNode
 {
     QString originalPath;
-    QVector<QString> copies;
+    std::vector<QString> copies;
 };
-typedef QVector<EqualNode>EqualsTree;
+typedef std::vector<EqualNode>EqualsTree;
 typedef EqualsTree::iterator EqualsIterator;
 
 class RepeatFinder
 {
-    QVector<El> fileVector;
-    QVector<El> dirVector;
+    std::vector<El> fileVector;
+    std::vector<El> dirVector;
     QHash<QString, QByteArray> cache;
-    static const long cacheMinimum = 1024 * 1024 * 2; // 2 Mb
+    static constexpr long cacheMinimum = 1024 * 1024 * 2; // 2 Mb
 
 public:
     RepeatFinder();
@@ -36,25 +36,25 @@ public:
     EqualsTree findFile(const QString path);
     EqualsTree diffFolder(const QString path);
 private:
-    qint32 add(const QDir &dir, QVector<El> &fileVector, QVector<El> &dirVector);
-    qint32 addFile(const QString path, QVector<El> &fileVector);
+    qint32 add(const QDir &dir, std::vector<El> &fileVector, std::vector<El> &dirVector);
+    qint32 addFile(const QString path, std::vector<El> &fileVector);
 
     /// Builds sorted by size list of files in dir and subdirs.
-    void buildFilesList(const QString &path, QVector<El> &fileVector, QVector<El> &dirVector);
+    void buildFilesList(const QString &path, std::vector<El> &fileVector, std::vector<El> &dirVector);
     /// \brief Builds A tree where each branch represents copies of the same file.
     /// \param inputEntriesVector - a sorted by size vector of files.
     /// \returns the tree.
-    EqualsTree buildEqualsTree(const QVector<El> &inputEntriesVector);
+    EqualsTree buildEqualsTree(const std::vector<El> &inputEntriesVector);
     void buildEqualsTreeForElement(const El &el,
-                                   const QVector<El> &inputEntriesVector,
+                                   const std::vector<El> &inputEntriesVector,
                                    EqualsTree &tree);
     /// \brief Builds A tree where each branch represents copies of the file by "path".
     /// \param path - the path to the file.
     /// \param v - a sorted by size vector of files.
     /// \returns the tree.
-    EqualsTree buildFileEqualsTree(const QString path, const QVector<El> &v);
+    EqualsTree buildFileEqualsTree(const QString path, const std::vector<El> &v);
 
-    EqualsTree diff(QVector<El> v1, QVector<El> v2);
+    EqualsTree diff(std::vector<El> v1, std::vector<El> v2);
 
     QByteArray fileHash(const QString &path);
     QByteArray dirHash(const QString &path);
