@@ -6,7 +6,9 @@
 class ThumbnailProvider
 {
 public:
-    static QPixmap GetThumbnail(QString path, long width = 300, long heigth = 300);
+    static QPixmap GetThumbnail(const QString &path,
+                                const long width = 300,
+                                const long heigth = 300);
 };
 
 #endif // THUMBNAILPROVIDER_H

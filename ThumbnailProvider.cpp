@@ -2,6 +2,7 @@
 
 // C++ STL
 #include <string>
+#include <memory>
 // Qt
 #include <QPixmap>
 #include <QDebug>
@@ -13,77 +14,108 @@
 #include <shobjidl.h>
 #include <shlobj.h>
 
-///I used http://www.cplusplus.com/forum/windows/100661/
-static HBITMAP Thumbnail(std::wstring File, long width = 300, long heigth = 300)
+namespace
 {
-    std::wstring Folder,FileName;
+template<class T>
+class Releaser
+{
+public:
+    void operator()(T *obj)
+    {
+        qDebug() << __FUNCTION__ << obj;
+        obj->Release();
+    }
+};
+
+typedef std::shared_ptr<HBITMAP__> HbitmapPtr;
+
+///I used http://www.cplusplus.com/forum/windows/100661/
+static HbitmapPtr Thumbnail(const std::wstring &File,
+                            const long width = 300,
+                            const long heigth = 300)
+{
     int Pos = File.find_last_of(L"\\");
-    Folder = File.substr(0,Pos);
-    FileName = File.substr(Pos+1);
 
-    IShellFolder* pDesktop = NULL;
-    IShellFolder* pSub = NULL;
-    IExtractImage* pIExtract = NULL;
+    std::shared_ptr<IShellFolder> desktop;
+    {
+        IShellFolder* pDesktop = NULL;
+        const HRESULT hr = SHGetDesktopFolder(&pDesktop);
+        if(FAILED(hr))
+        {
+            qDebug() << __FUNCTION__ << __LINE__ << "!!!!!!!!!!!!";
+            return NULL;
+        }
+        desktop = std::shared_ptr<IShellFolder>(pDesktop, Releaser<IShellFolder>());
+    }
+
     LPITEMIDLIST pidl = NULL;
-
-    HRESULT hr;
-    hr = SHGetDesktopFolder(&pDesktop);
-    if(FAILED(hr))
     {
-        qDebug() << __FUNCTION__ << __LINE__ << "!!!!!!!!!!!!";
-        return NULL;
-    }
-    hr = pDesktop->ParseDisplayName(NULL, NULL, (LPWSTR)Folder.c_str(), NULL, &pidl, NULL);
-    qDebug() << __FUNCTION__ << __LINE__ << QString().fromWCharArray(Folder.c_str());
-    if(FAILED(hr))
-    {
-        qDebug() << __FUNCTION__ << __LINE__ << "!!!!!!!!!!!!";
-        return NULL;
-    }
-    hr = pDesktop->BindToObject(pidl, NULL, IID_IShellFolder, (void**)&pSub);
-    if(FAILED(hr))
-    {
-        qDebug() << __FUNCTION__ << __LINE__ << "!!!!!!!!!!!!";
-        return NULL;
-    }
-    hr = pSub->ParseDisplayName(NULL, NULL, (LPWSTR)FileName.c_str(), NULL, &pidl, NULL);
-    qDebug() << __FUNCTION__ << __LINE__ << QString().fromWCharArray(FileName.c_str());
-    if(FAILED(hr))
-    {
-        qDebug() << __FUNCTION__ << __LINE__ << "!!!!!!!!!!!!";
-        return NULL;
-    }
-    hr = pSub ->GetUIObjectOf(NULL, 1, (LPCITEMIDLIST *)&pidl, IID_IExtractImage, NULL, (void**)& pIExtract);
-    if(FAILED(hr))
-    {
-        qDebug() << __FUNCTION__ << __LINE__ << "!!!!!!!!!!!!";
-        return NULL;
+        const std::wstring Folder = File.substr(0,Pos);
+        const HRESULT hr = desktop->ParseDisplayName(NULL, NULL, (LPWSTR)Folder.c_str(), NULL, &pidl, NULL);
+        qDebug() << __FUNCTION__ << __LINE__ << QString().fromWCharArray(Folder.c_str());
+        if(FAILED(hr))
+        {
+            qDebug() << __FUNCTION__ << __LINE__ << "!!!!!!!!!!!!";
+            return NULL;
+        }
     }
 
-    SIZE size{width, heigth};
+    std::shared_ptr<IShellFolder> sub;
+    {
+        IShellFolder* pSub = NULL;
+        const HRESULT hr = desktop->BindToObject(pidl, NULL, IID_IShellFolder, (void**)&pSub);
+        if(FAILED(hr))
+        {
+            qDebug() << __FUNCTION__ << __LINE__ << "!!!!!!!!!!!!";
+            return NULL;
+        }
+        sub = std::shared_ptr<IShellFolder>(pSub, Releaser<IShellFolder>());
+    }
+    {
+        const std::wstring FileName = File.substr(Pos+1);
+        const HRESULT hr = sub->ParseDisplayName(NULL, NULL, (LPWSTR)FileName.c_str(), NULL, &pidl, NULL);
+        qDebug() << __FUNCTION__ << __LINE__ << QString().fromWCharArray(FileName.c_str());
+        if(FAILED(hr))
+        {
+            qDebug() << __FUNCTION__ << __LINE__ << "!!!!!!!!!!!!";
+            return NULL;
+        }
+    }
 
-    DWORD dwFlags = IEIFLAG_ORIGSIZE | IEIFLAG_QUALITY;
+    std::shared_ptr<IExtractImage> extract;
+    {
+        IExtractImage* pIExtract = NULL;
+        const HRESULT hr = sub ->GetUIObjectOf(NULL, 1, (LPCITEMIDLIST *)&pidl, IID_IExtractImage, NULL, (void**)& pIExtract);
+        if(FAILED(hr))
+        {
+            qDebug() << __FUNCTION__ << __LINE__ << "!!!!!!!!!!!!";
+            return NULL;
+        }
+        extract = std::shared_ptr<IExtractImage>(pIExtract,  Releaser<IExtractImage>());
+    }
+
+    {// Set up the options for the image
+        SIZE size{width, heigth};
+        DWORD dwFlags = IEIFLAG_ORIGSIZE | IEIFLAG_QUALITY;
+        OLECHAR pathBuffer[MAX_PATH];
+        const HRESULT hr = extract->GetLocation(pathBuffer, MAX_PATH, NULL, &size,32, &dwFlags);
+        (void)hr;
+    }
 
     HBITMAP hThumbnail = NULL;
+    {// Get the image
+        const HRESULT hr = extract ->Extract(&hThumbnail);
+        (void)hr;
+    }
 
-    // Set up the options for the image
-    OLECHAR pathBuffer[MAX_PATH];
-    hr = pIExtract->GetLocation(pathBuffer, MAX_PATH, NULL, &size,32, &dwFlags);
-
-    // Get the image
-    hr = pIExtract ->Extract(&hThumbnail);
-
-    pDesktop->Release();
-    pSub->Release();
-    pIExtract->Release();
-
-    return hThumbnail;
+    HbitmapPtr ptr(hThumbnail, DeleteObject);
+    return ptr;
+}
 }
 
-QPixmap ThumbnailProvider::GetThumbnail(QString path, long width, long heigth)
+QPixmap ThumbnailProvider::GetThumbnail(const QString &path, const long width, const long heigth)
 {
-    HBITMAP hBmp = Thumbnail(path.replace('/', '\\').toStdWString(), width, heigth);
-    QPixmap ret = QtWin::fromHBITMAP(hBmp);
-    DeleteObject(hBmp);
+    HbitmapPtr hBmp = Thumbnail(QString(path).replace('/', '\\').toStdWString(), width, heigth);
+    QPixmap ret = QtWin::fromHBITMAP(hBmp.get());
     return ret;
 }
