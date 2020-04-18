@@ -9,7 +9,6 @@ install:
   - sudo apt install qt5-default qtbase5-dev cppcheck
 
 script:
-  - cd ./src
   - qmake CopiesFinder.pro
   - make
   # Cppcheck 
